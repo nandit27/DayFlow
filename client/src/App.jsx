@@ -12,6 +12,8 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import AttendanceModule from "./pages/attendance/AttendanceModule";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import EmployeeProfileView from "./pages/employee/EmployeeProfileView";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -123,6 +125,8 @@ function App() {
         </Route>
 
         <Route path="/attendance" element={<AttendanceModule />} />
+        <Route path="/employee" element={<EmployeeDashboard />} />
+        <Route path="/employee/:id" element={<EmployeeProfileView />} />
       </Routes>
     </>
   );

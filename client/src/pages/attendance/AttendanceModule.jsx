@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminAttendanceView from './AdminAttendanceView';
 import EmployeeAttendanceView from './EmployeeAttendanceView';
 import { cn } from "@/lib/utils";
@@ -6,8 +7,10 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function AttendanceModule() {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState('employee'); // 'employee' or 'admin'
     const [activeTab, setActiveTab] = useState('attendance');
-    
+
     // Determine view based on user role
     const isAdmin = user?.role === 'HR' || user?.role === 'Admin';
 
@@ -24,7 +27,13 @@ export default function AttendanceModule() {
                         {['Employees', 'Attendance', 'Time Off'].map((tab) => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab.toLowerCase())}
+                                onClick={() => {
+                                    if (tab === 'Employees') {
+                                        navigate('/employee');
+                                    } else {
+                                        setActiveTab(tab.toLowerCase());
+                                    }
+                                }}
                                 className={cn(
                                     "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
                                     activeTab === tab.toLowerCase()
@@ -64,6 +73,10 @@ export default function AttendanceModule() {
                         ) : (
                             <EmployeeAttendanceView />
                         )}
+                    </div>
+                ) : activeTab === 'time off' ? (
+                    <div className="animate-in fade-in duration-300">
+                        <TimeOffView />
                     </div>
                 ) : (
                     /* Placeholder for other tabs */
