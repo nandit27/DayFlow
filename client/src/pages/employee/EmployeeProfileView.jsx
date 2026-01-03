@@ -15,6 +15,7 @@ import {
     X,
     Loader2
 } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import { useAuthStore } from '@/store/authStore';
 import { useProfileStore } from '@/store/profileStore';
 import { format } from 'date-fns';
@@ -25,7 +26,6 @@ export default function EmployeeProfileView() {
     const { user, logout } = useAuthStore();
     const { myProfile, isLoading, isUpdating, fetchMyProfile, updateMyProfile } = useProfileStore();
 
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Resume');
     const [isEditing, setIsEditing] = useState(false);
 
