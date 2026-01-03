@@ -86,52 +86,49 @@ const validatePassword = (password) => {
 };
 
 export const signupUser = async ({ companyName, name, email, phone, password, role }) => {
-  const session = await mongoose.startSession();
   try {
-    return await session.withTransaction(async () => {
-      // Validate all required fields
-      if (!companyName || !name || !email || !phone || !password) {
-        throw new APIError(400, "All fields are required");
-      }
+    // Validate all required fields
+    if (!companyName || !name || !email || !phone || !password) {
+      throw new APIError(400, "All fields are required");
+    }
 
-      // Validate password strength
-      const passwordErrors = validatePassword(password);
-      if (passwordErrors.length > 0) {
-        throw new APIError(400, passwordErrors.join('. '));
-      }
+    // Validate password strength
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      throw new APIError(400, passwordErrors.join('. '));
+    }
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email }).session(session);
-      if (existingUser) {
-        throw new APIError(400, "User already exists");
-      }
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new APIError(400, "User already exists");
+    }
 
-      // Generate Employee ID
-      const employeeId = await generateEmployeeId(name, companyName);
+    // Generate Employee ID
+    const employeeId = await generateEmployeeId(name, companyName);
 
-      // Generate verification token
-      const verificationToken = generateVerificationToken();
-      
-      // Create new user
-      const user = new User({
-        employeeId,
-        companyName,
-        name,
-        email,
-        phone,
-        password,
-        role: role || 'Employee', // Default to Employee if not provided
-        verificationToken,
-        verificationTokenExpiresAt: Date.now() + 1 * 60 * 60 * 1000,
-      });
-
-      await user.save({ session });
-      await sendVerificationEmail(user.email, verificationToken);
-      await session.commitTransaction();
-      return user;
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+    
+    // Create new user
+    const user = new User({
+      employeeId,
+      companyName,
+      name,
+      email,
+      phone,
+      password,
+      role: role || 'Employee', // Default to Employee if not provided
+      verificationToken,
+      verificationTokenExpiresAt: Date.now() + 1 * 60 * 60 * 1000,
     });
-  } finally {
-    session.endSession();
+
+    await user.save();
+    await sendVerificationEmail(user.email, verificationToken);
+    return user;
+  } catch (error) {
+    logger.error('Error in signupUser service:', error);
+    throw error;
   }
 };
 
@@ -186,63 +183,59 @@ export const logoutUser = () => {
 };
 
 export const forgotPasswordUser = async (email) => {
-  const session = await mongoose.startSession();
   try {
-    return await session.withTransaction(async () => {
-      const user = await User.findOne({ email }).session(session);
-      if (!user) {
-        throw new APIError(400, "User not found");
-      }
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new APIError(400, "User not found");
+    }
 
-      const rawToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
 
-      user.resetPasswordToken = hashedToken;
-      user.resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
-      await user.save({ session });
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
+    await user.save();
 
-      await sendResetPasswordEmail(
-        user.email,
-        `${CLIENT_URL}/reset-password/${rawToken}`
-      );
-      return rawToken;
-    });
-  } finally {
-    session.endSession();
+    await sendResetPasswordEmail(
+      user.email,
+      `${CLIENT_URL}/reset-password/${rawToken}`
+    );
+    return rawToken;
+  } catch (error) {
+    logger.error('Error in forgotPasswordUser service:', error);
+    throw error;
   }
 };
 
 export const resetPasswordUser = async (token, password) => {
-  const session = await mongoose.startSession();
   try {
-    await session.withTransaction(async () => {
-      const hashedToken = crypto
-        .createHash("sha256")
-        .update(token)
-        .digest("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
 
-      const user = await User.findOne({
-        resetPasswordToken: hashedToken,
-        resetPasswordExpiresAt: { $gt: Date.now() },
-      }).session(session);
-
-      if (!user) {
-        throw new APIError(400, "Invalid token");
-      }
-
-      user.password = password;
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpiresAt = undefined;
-      await user.save({ session });
-
-      await sendResetSuccessEmail(user.email);
-      return user;
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpiresAt: { $gt: Date.now() },
     });
-  } finally {
-    session.endSession();
+
+    if (!user) {
+      throw new APIError(400, "Invalid token");
+    }
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
+
+    await sendResetSuccessEmail(user.email);
+    return user;
+  } catch (error) {
+    logger.error('Error in resetPasswordUser service:', error);
+    throw error;
   }
 };
 
