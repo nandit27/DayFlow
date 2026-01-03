@@ -3,11 +3,17 @@ import { Search, ChevronDown, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Mock Data
-const EMPLOYEES = Array(12).fill(null).map((_, i) => ({
-    id: i,
-    name: `[Employee Name ${i + 1}]`,
-    status: i % 3 === 0 ? 'online' : 'offline',
-}));
+const EMPLOYEES = Array(12).fill(null).map((_, i) => {
+    let name = `Employee ${i + 1}`;
+    if (i === 0) name = "Jay Patel";
+    if (i === 5) name = "Sarah Conner";
+
+    return {
+        id: i === 0 ? '1' : (i + 1).toString(), // Ensure ID is string for routing consistency
+        name: name,
+        status: i % 3 === 0 ? 'online' : 'offline',
+    };
+});
 
 export default function EmployeeDashboard() {
     const navigate = useNavigate();
@@ -78,15 +84,18 @@ export default function EmployeeDashboard() {
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                         >
-                            <div className="h-8 w-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-700 text-xs font-bold">
-                                JD
+                            <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 text-xs font-bold">
+                                JE
                             </div>
                             <ChevronDown className={`h-4 w-4 text-gray-500 duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isProfileOpen && (
                             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left">
+                                <button
+                                    onClick={() => { navigate('/employee/me'); setIsProfileOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                                >
                                     <User className="h-4 w-4" /> My Profile
                                 </button>
                                 <div className="h-px bg-gray-100 my-1" />
@@ -124,9 +133,14 @@ export default function EmployeeDashboard() {
 
                     {/* Toolbar */}
                     <div className="flex items-center justify-between gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
-                        <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-md text-sm font-semibold border border-purple-200">
-                            NEW
-                        </span>
+                        {userRole === 'admin' && (
+                            <button
+                                onClick={() => navigate('/employee/new')}
+                                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-md text-sm font-semibold border border-purple-200 hover:bg-purple-200 transition-colors"
+                            >
+                                NEW
+                            </button>
+                        )}
 
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

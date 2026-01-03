@@ -44,23 +44,112 @@ export default function EmployeeProfileView() {
     }, [monthWage]);
 
 
-    // Mock Data based on the image
-    const employeeData = {
-        name: "Jay Patel",
+    const isNewEmployee = id === 'new';
+    const isOwnProfile = id === 'me';
+
+    // Data Templates
+    const emptyData = {
+        name: "",
+        role: "",
+        loginId: "",
+        email: "",
+        mobile: "",
+        company: "Tech Solutions Inc.",
+        department: "",
+        manager: "",
+        location: "",
+        about: "",
+        jobLove: "",
+        hobbies: "",
+        skills: [],
+        certifications: [],
+        dob: "",
+        address: "",
+        nationality: "",
+        personalEmail: "",
+        gender: "",
+        maritalStatus: "",
+        doj: "",
+        bankAccount: "",
+        bankName: "",
+        ifsc: "",
+        pan: "",
+        uan: "",
+        empCode: ""
+    };
+
+    const jenilData = {
+        name: "Jenil",
         role: "Software Engineer",
-        loginId: "jay.patel",
-        email: "jay.patel@company.com",
+        loginId: "jenil07",
+        email: "jenil07@company.com",
         mobile: "+91 98765 43210",
         company: "Tech Solutions Inc.",
         department: "Engineering",
         manager: "Sarah Conner",
         location: "Ahmedabad, India",
-        about: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
-        jobLove: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.",
-        hobbies: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.",
+        about: "Passionate software engineer with a focus on full-stack development. Love building scalable applications and learning new technologies.",
+        jobLove: "I love the challenge of solving complex problems and the continuous learning environment.",
+        hobbies: "Coding, Gaming, Reading Tech Blogs",
         skills: ["React", "Node.js", "Python", "UI/UX Design"],
-        certifications: ["AWS Certified Developer", "Meta Frontend Developer"]
+        certifications: ["AWS Certified Developer", "Meta Frontend Developer"],
+        dob: "15 Aug 1995",
+        address: "123, Maple Street, Thaltej, Ahmedabad",
+        nationality: "Indian",
+        personalEmail: "jenil.personal@gmail.com",
+        gender: "Male",
+        maritalStatus: "Single",
+        doj: "01 Jan 2020",
+        bankAccount: "1234567890",
+        bankName: "HDFC Bank",
+        ifsc: "HDFC0001234",
+        pan: "ABCDE1234F",
+        uan: "100200300400",
+        empCode: "EMP001"
     };
+
+    const jayPatelData = {
+        name: "Jay Patel",
+        role: "Senior Developer",
+        loginId: "jay.patel",
+        email: "jay.patel@company.com",
+        mobile: "+91 98765 43211",
+        company: "Tech Solutions Inc.",
+        department: "Engineering",
+        manager: "Sarah Conner",
+        location: "Ahmedabad, India",
+        about: "Experienced developer with a strong background in backend systems.",
+        jobLove: "Mentoring junior developers and architecting robust solutions.",
+        hobbies: "Traveling, Photography",
+        skills: ["Java", "Spring Boot", "AWS", "System Design"],
+        certifications: ["Oracle Certified Professional"],
+        dob: "20 Sep 1990",
+        address: "456, Oak Avenue, Ahmedabad",
+        nationality: "Indian",
+        personalEmail: "jay.patel@gmail.com",
+        gender: "Male",
+        maritalStatus: "Married",
+        doj: "15 Mar 2018",
+        bankAccount: "0987654321",
+        bankName: "ICICI Bank",
+        ifsc: "ICIC0001234",
+        pan: "FGHIJ5678K",
+        uan: "500600700800",
+        empCode: "EMP002"
+    };
+
+    const getInitialData = () => {
+        if (isNewEmployee) return emptyData;
+        if (isOwnProfile) return jenilData;
+        return jayPatelData;
+    };
+
+    const [employeeData, setEmployeeData] = useState(getInitialData);
+
+    // Update data when ID changes
+    useMemo(() => {
+        setEmployeeData(getInitialData());
+    }, [id]);
 
     const handleNavigation = (tab) => {
         if (tab === 'Attendance') {
@@ -109,15 +198,18 @@ export default function EmployeeProfileView() {
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                         >
-                            <div className="h-8 w-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-700 text-xs font-bold">
-                                JD
+                            <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 text-xs font-bold">
+                                JE
                             </div>
                             <ChevronDown className={`h-4 w-4 text-gray-500 duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isProfileOpen && (
                             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left">
+                                <button
+                                    onClick={() => { navigate('/employee/me'); setIsProfileOpen(false); }}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                                >
                                     <User className="h-4 w-4" /> My Profile
                                 </button>
                                 <div className="h-px bg-gray-100 my-1" />
@@ -155,13 +247,17 @@ export default function EmployeeProfileView() {
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                         <div className="h-32 w-32 rounded-full bg-red-100 flex items-center justify-center border-4 border-white shadow-sm ring-1 ring-gray-200 relative">
-                            <span className="text-4xl text-red-400">✏️</span>
+                            {isNewEmployee ? <User className="h-12 w-12 text-red-400" /> : <span className="text-4xl text-red-400">✏️</span>}
                             <div className="absolute bottom-1 right-1 bg-green-500 h-4 w-4 rounded-full border-2 border-white"></div>
                         </div>
                         <div className="mt-2 text-center">
-                            <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                                {employeeData.name}
-                            </span>
+                            {isNewEmployee ? (
+                                <input type="text" placeholder="Name" className="text-center bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm w-full" />
+                            ) : (
+                                <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                                    {employeeData.name}
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -207,18 +303,26 @@ export default function EmployeeProfileView() {
                 {/* Tabs */}
                 <div className="border-b border-gray-200 mb-6">
                     <div className="flex gap-8">
-                        {['Resume', 'Private Info'].concat(userRole === 'admin' ? ['Salary Info'] : []).map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
-                                    ? 'border-gray-900 text-gray-900'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                                    }`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
+                        {['Resume', 'Private Info', 'Salary Info', 'Security'].map((tab) => {
+                            const isOwnProfile = id === 'me' || id === 'new'; // 'new' also needs all tabs to fill info
+                            const isAdmin = userRole === 'admin';
+                            const isSensitive = tab === 'Salary Info' || tab === 'Security' || tab === 'Private Info';
+
+                            if (isSensitive && !isAdmin && !isOwnProfile) return null;
+
+                            return (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
+                                        ? 'border-gray-900 text-gray-900'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    {tab}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -279,131 +383,76 @@ export default function EmployeeProfileView() {
                 )}
 
                 {/* Tab Content - Private Info */}
-                {activeTab === 'Private Info' && (
-                    <div className="animate-in fade-in duration-300 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-
-                        {/* Private Contact */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Private Contact</h3>
+                {activeTab === 'Private Info' && (userRole === 'admin' || id === 'me' || id === 'new') && (
+                    <div className="animate-in fade-in duration-300 grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-12">
+                        {/* Left Column - Personal Details */}
+                        <div className="space-y-8">
                             <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Address</span>
-                                    <span className="text-gray-900 text-sm">123, Maple Street, Thaltej, Ahmedabad - 380054</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Date of Birth</span>
+                                    <input type="text" defaultValue={employeeData.dob} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Email</span>
-                                    <span className="text-gray-900 text-sm">jay.patel.personal@gmail.com</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Residing Address</span>
+                                    <input type="text" defaultValue={employeeData.address} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Phone</span>
-                                    <span className="text-gray-900 text-sm">+91 98765 43210</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Nationality</span>
+                                    <input type="text" defaultValue={employeeData.nationality} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Language</span>
-                                    <span className="text-gray-900 text-sm">English, Hindi, Gujarati</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Personal Email</span>
+                                    <input type="text" defaultValue={employeeData.personalEmail} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Home-Work Distance</span>
-                                    <span className="text-gray-900 text-sm">12 km</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Gender</span>
+                                    <input type="text" defaultValue={employeeData.gender} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                </div>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Marital Status</span>
+                                    <input type="text" defaultValue={employeeData.maritalStatus} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                </div>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Date of Joining</span>
+                                    <input type="text" defaultValue={employeeData.doj} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
                             </div>
-                        </section>
+                        </div>
 
-                        {/* Citizenship */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Citizenship</h3>
+                        {/* Right Column - Bank Details */}
+                        <div className="space-y-8">
+                            <h3 className="text-gray-900 font-medium text-lg border-b border-gray-200 pb-2">Bank Details</h3>
                             <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Nationality</span>
-                                    <span className="text-gray-900 text-sm">Indian</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Account Number</span>
+                                    <input type="text" defaultValue={employeeData.bankAccount} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Identification No</span>
-                                    <span className="text-gray-900 text-sm">1234 5678 9012</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Bank Name</span>
+                                    <input type="text" defaultValue={employeeData.bankName} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Passport No</span>
-                                    <span className="text-gray-900 text-sm">X1234567</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">IFSC Code</span>
+                                    <input type="text" defaultValue={employeeData.ifsc} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Gender</span>
-                                    <span className="text-gray-900 text-sm">Male</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">PAN No</span>
+                                    <input type="text" defaultValue={employeeData.pan} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Date of Birth</span>
-                                    <span className="text-gray-900 text-sm">15 Aug 1995</span>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">UAN NO</span>
+                                    <input type="text" defaultValue={employeeData.uan} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                </div>
+                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">Emp Code</span>
+                                    <input type="text" defaultValue={employeeData.empCode} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
                                 </div>
                             </div>
-                        </section>
-
-                        {/* Marital Status */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Marital Status</h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Marital Status</span>
-                                    <span className="text-gray-900 text-sm">Single</span>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Emergency */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Emergency</h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Contact Name</span>
-                                    <span className="text-gray-900 text-sm">Ramesh Patel</span>
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Relationship</span>
-                                    <span className="text-gray-900 text-sm">Father</span>
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Phone</span>
-                                    <span className="text-gray-900 text-sm">+91 98798 76543</span>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Work Permit */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Work Permit</h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Visa No</span>
-                                    <span className="text-gray-900 text-sm">-</span>
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Work Permit No</span>
-                                    <span className="text-gray-900 text-sm">-</span>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Education */}
-                        <section className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-2">Education</h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Certificate Level</span>
-                                    <span className="text-gray-900 text-sm">Bachelor</span>
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">Field of Study</span>
-                                    <span className="text-gray-900 text-sm">Computer Engineering</span>
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4">
-                                    <span className="text-gray-500 text-sm">School</span>
-                                    <span className="text-gray-900 text-sm">G.H. Patel College of Engineering & Technology</span>
-                                </div>
-                            </div>
-                        </section>
-
+                        </div>
                     </div>
                 )}
 
-                {activeTab === 'Salary Info' && userRole === 'admin' && (
+                {activeTab === 'Salary Info' && (userRole === 'admin' || id === 'me' || id === 'new') && (
                     <div className="animate-in fade-in duration-300 space-y-12">
                         {/* Top Salary Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-gray-200 pb-8">
@@ -530,6 +579,59 @@ export default function EmployeeProfileView() {
                                 </div>
                             </div>
 
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab Content - Security (Credentials) */}
+                {activeTab === 'Security' && (userRole === 'admin' || id === 'me' || id === 'new') && (
+                    <div className="animate-in fade-in duration-300 max-w-2xl mx-auto border border-gray-200 rounded-xl p-8 bg-gray-50">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <span className="bg-blue-100 p-2 rounded-lg text-blue-600"><User className="h-5 w-5" /></span>
+                            {id === 'me' ? 'Change Password' : 'Credential Management'}
+                        </h3>
+
+                        <div className="space-y-6">
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div className="flex">
+                                    <div className="ml-3">
+                                        <p className="text-sm text-yellow-700">
+                                            {id === 'me'
+                                                ? "You can update your password here. Please choose a strong password."
+                                                : "Set up the initial login credentials for the employee. They will be required to change their password upon first login."
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-[160px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm font-medium">System Login ID</span>
+                                    <input
+                                        type="text"
+                                        defaultValue={employeeData.loginId || ""}
+                                        placeholder="e.g. jay.patel"
+                                        readOnly={id === 'me' && !(id === 'new')}
+                                        className={`w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none ${id === 'me' && !(id === 'new') ? 'text-gray-500 cursor-not-allowed' : 'focus:border-blue-500'}`}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-[160px_1fr] gap-4 items-center">
+                                    <label className="text-gray-700 font-medium">Password</label>
+                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" />
+                                </div>
+                                <div className="grid grid-cols-[160px_1fr] gap-4 items-center">
+                                    <label className="text-gray-700 font-medium">Confirm Password</label>
+                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" />
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-gray-200 flex justify-end gap-3">
+                                <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+                                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                                    {isNewEmployee ? 'Create Employee' : (id === 'me' ? 'Update Password' : 'Update Credentials')}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
