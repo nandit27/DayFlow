@@ -1,6 +1,46 @@
-# React + Vite + Shdcn
+# DayFlow
 
-This template provides a minimal setup to get React working in Vite with Shadcn and more packages.
+A full-stack application with authentication system.
 
-You can use this template by scaffolding using "degit github:codechini/Vite-React-Shadcn" or on Github there is a "Use this template to get started".
-- Check out degit doc for more info if you face difficulty <a href='https://www.npmjs.com/package/degit' target='_blank' >degit Usage</a>.
+## Project Structure
+
+```
+DayFlow/
+├── client/          # React frontend with Vite + Shadcn
+├── server/          # Node.js backend with authentication
+└── auth-system-main/ # Original auth system reference
+```
+
+## Getting Started
+
+### Install Dependencies
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Or install individually
+npm run install:client
+npm run install:server
+```
+
+### Development
+
+```bash
+# Run both client and server
+npm run dev
+
+# Or run individually
+npm run dev:client
+npm run dev:server
+```
+
+### Build
+
+```bash
+# Build client
+npm run build:client
+
+# Start production server
+npm run start:server
+```
