@@ -24,10 +24,11 @@ export default function EmployeeProfileView() {
     const navigate = useNavigate();
     const { id } = useParams();
     const { user, logout } = useAuthStore();
-    const { myProfile, isLoading, isUpdating, fetchMyProfile, updateMyProfile } = useProfileStore();
+    const { myProfile, otherProfile, isLoading, isUpdating, fetchMyProfile, fetchUserProfile, updateMyProfile } = useProfileStore();
 
     const [activeTab, setActiveTab] = useState('Resume');
     const [isEditing, setIsEditing] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     // Simulated Role for Demo (can be synced with user.role later)
     const isAdmin = user?.role === 'Admin' || user?.role === 'HR';
@@ -118,17 +119,22 @@ export default function EmployeeProfileView() {
         empCode: ""
     });
 
-    // Fetch profile on mount if "me"
+    // Fetch profile on mount
     useEffect(() => {
         if (isOwnProfile) {
             fetchMyProfile();
+        } else if (id && id !== 'new' && isAdmin) {
+            // Admin viewing another employee's profile
+            fetchUserProfile(id);
         }
-    }, [isOwnProfile, fetchMyProfile]);
+    }, [id, isOwnProfile, isAdmin]);
 
     // Determine what data to show
     const displayData = useMemo(() => {
         if (isNewEmployee) return {};
-        if (isOwnProfile && myProfile) {
+        
+        if (isOwnProfile) {
+            if (!myProfile) return null;
             return {
                 ...myProfile,
                 name: user?.name,
@@ -145,14 +151,39 @@ export default function EmployeeProfileView() {
                 skills: ["React", "Node.js", "MongoDB"],
                 certifications: [],
                 dob: myProfile.dateOfBirth ? format(new Date(myProfile.dateOfBirth), 'dd MMM yyyy') : "N/A",
-                personalEmail: user?.email, // Fallback
+                personalEmail: user?.email,
                 gender: myProfile.gender || "Not set",
                 maritalStatus: "Single",
                 doj: myProfile.joiningDate ? format(new Date(myProfile.joiningDate), 'dd MMM yyyy') : "N/A",
             };
         }
-        return jayPatelData; // Mock for anyone else
-    }, [id, isOwnProfile, myProfile, user]);
+        
+        // Admin viewing another employee
+        if (otherProfile) {
+            return {
+                ...otherProfile,
+                name: otherProfile.user?.name || "Employee",
+                email: otherProfile.user?.email,
+                role: otherProfile.designation || "Employee",
+                loginId: otherProfile.user?.employeeId,
+                mobile: otherProfile.user?.phone || otherProfile.emergencyContact?.phone,
+                department: otherProfile.department || "Engineering",
+                location: otherProfile.address || "Ahmedabad, India",
+                about: otherProfile.about || "Employee profile.",
+                jobLove: "Building great products.",
+                hobbies: "Various interests",
+                skills: otherProfile.skills || [],
+                certifications: otherProfile.certifications || [],
+                dob: otherProfile.dateOfBirth ? format(new Date(otherProfile.dateOfBirth), 'dd MMM yyyy') : "N/A",
+                personalEmail: otherProfile.personalEmail || otherProfile.user?.email,
+                gender: otherProfile.gender || "Not set",
+                maritalStatus: otherProfile.maritalStatus || "Not set",
+                doj: otherProfile.joiningDate ? format(new Date(otherProfile.joiningDate), 'dd MMM yyyy') : "N/A",
+            };
+        }
+        
+        return null;
+    }, [id, isOwnProfile, myProfile, otherProfile, user]);
 
     // Initialize formData when profile/displayData changes
     useEffect(() => {
@@ -217,11 +248,19 @@ export default function EmployeeProfileView() {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(amount);
     }
 
-    if (isOwnProfile && isLoading && !myProfile) {
+    if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-4" />
-                <p className="text-gray-500">Loading your profile...</p>
+                <p className="text-gray-500">Loading profile...</p>
+            </div>
+        );
+    }
+
+    if (!displayData && !isNewEmployee) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <p className="text-gray-500">Profile not found</p>
             </div>
         );
     }

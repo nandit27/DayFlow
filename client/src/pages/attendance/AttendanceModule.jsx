@@ -1,6 +1,6 @@
 import Navbar from '@/components/Navbar';
-import AdminAttendanceView from './AdminAttendanceView';
-import EmployeeAttendanceView from './EmployeeAttendanceView';
+import AdminAttendanceView2 from './AdminAttendanceView2';
+import EmployeeAttendanceView2 from './EmployeeAttendanceView2';
 import { useAuthStore } from '@/store/authStore';
 
 export default function AttendanceModule() {
@@ -13,9 +13,9 @@ export default function AttendanceModule() {
 
             <div className="max-w-7xl mx-auto p-6">
                 {isAdmin ? (
-                    <AdminAttendanceView />
+                    <AdminAttendanceView2 />
                 ) : (
-                    <EmployeeAttendanceView />
+                    <EmployeeAttendanceView2 />
                 )}
             </div>
         </div>

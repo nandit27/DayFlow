@@ -80,6 +80,25 @@ const employeeProfileSchema = new mongoose.Schema(
         },
       },
     ],
+    // Leave Allocation
+    leaveAllocation: {
+      PAID: {
+        type: Number,
+        default: 24,
+      },
+      SICK: {
+        type: Number,
+        default: 7,
+      },
+      CASUAL: {
+        type: Number,
+        default: 12,
+      },
+      UNPAID: {
+        type: Number,
+        default: 0,
+      },
+    },
     // Meta
     isActive: {
       type: Boolean,

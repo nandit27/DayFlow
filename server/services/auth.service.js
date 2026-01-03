@@ -156,7 +156,14 @@ export const loginUser = async ({ email, password }) => {
     throw new APIError(400, "All fields are required");
   }
 
-  const user = await User.findOne({ email }).select("+password");
+  // Check if email is actually an employeeId (doesn't contain @)
+  const isEmployeeId = !email.includes('@');
+  
+  // Find user by either email or employeeId
+  const user = await User.findOne(
+    isEmployeeId ? { employeeId: email } : { email }
+  ).select("+password");
+  
   if (!user) {
     throw new APIError(400, "User not found");
   }

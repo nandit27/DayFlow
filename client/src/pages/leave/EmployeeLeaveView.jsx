@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import { Calendar, Plus, Loader2, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useLeaveStore } from '@/store/leaveStore';
+import { useProfileStore } from '@/store/profileStore';
 import ApplyLeaveModal from './ApplyLeaveModal';
 
 export default function EmployeeLeaveView() {
     const { myLeaves, isLoading, fetchMyLeaves, getLeaveStats } = useLeaveStore();
+    const { myProfile, fetchMyProfile } = useProfileStore();
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
 
     useEffect(() => {
         fetchMyLeaves();
-    }, [fetchMyLeaves]);
+        fetchMyProfile();
+    }, [fetchMyLeaves, fetchMyProfile]);
 
     const stats = getLeaveStats();
 
@@ -77,12 +80,49 @@ export default function EmployeeLeaveView() {
                 </div>
                 <button
                     onClick={() => setShowApplyModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm"
                 >
                     <Plus className="h-5 w-5" />
-                    Apply for Leave
+                    NEW
                 </button>
             </div>
+
+            {/* Leave Allocation Cards */}
+            {myProfile?.leaveAllocation && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6">
+                        <div>
+                            <p className="text-sm font-semibold text-blue-700 mb-2">Paid Time Off</p>
+                            <p className="text-3xl font-bold text-blue-900">{myProfile.leaveAllocation.PAID}</p>
+                            <p className="text-xs text-blue-600 mt-1">Days Available</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 p-6">
+                        <div>
+                            <p className="text-sm font-semibold text-green-700 mb-2">Sick Time Off</p>
+                            <p className="text-3xl font-bold text-green-900">{myProfile.leaveAllocation.SICK}</p>
+                            <p className="text-xs text-green-600 mt-1">Days Available</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-6">
+                        <div>
+                            <p className="text-sm font-semibold text-purple-700 mb-2">Casual Leave</p>
+                            <p className="text-3xl font-bold text-purple-900">{myProfile.leaveAllocation.CASUAL}</p>
+                            <p className="text-xs text-purple-600 mt-1">Days Available</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+                        <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-2">Unpaid Leave</p>
+                            <p className="text-3xl font-bold text-gray-900">{myProfile.leaveAllocation.UNPAID}</p>
+                            <p className="text-xs text-gray-600 mt-1">Days Available</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

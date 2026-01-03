@@ -47,8 +47,8 @@ const LoginPage = () => {
         <form onSubmit={handleLogin}>
           <Input
             icon={Mail}
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="Email or Employee ID"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

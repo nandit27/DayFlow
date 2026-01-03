@@ -12,6 +12,7 @@ axios.defaults.withCredentials = true;
 export const useProfileStore = create((set, get) => ({
   // State
   myProfile: null,
+  otherProfile: null,
   isLoading: false,
   isUpdating: false,
   error: null,
@@ -40,6 +41,37 @@ export const useProfileStore = create((set, get) => ({
       });
 
       // Don't show error toast on initial load if profile doesn't exist yet
+      if (error?.response?.status !== 404) {
+        toast.error(message);
+      }
+
+      return { success: false, message };
+    }
+  },
+
+  // Fetch Other User's Profile (HR only)
+  fetchUserProfile: async (userId) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await axios.get(`${API_URL}/${userId}`);
+
+      set({
+        otherProfile: response.data.data,
+        isLoading: false,
+      });
+
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      const message =
+        error?.response?.data?.message || "Failed to fetch user profile";
+
+      set({
+        error: message,
+        isLoading: false,
+        otherProfile: null,
+      });
+
       if (error?.response?.status !== 404) {
         toast.error(message);
       }
@@ -84,6 +116,7 @@ export const useProfileStore = create((set, get) => ({
   reset: () =>
     set({
       myProfile: null,
+      otherProfile: null,
       isLoading: false,
       isUpdating: false,
       error: null,

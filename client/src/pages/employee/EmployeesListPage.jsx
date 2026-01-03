@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Circle, Plane } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useAuthStore } from '@/store/authStore';
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 axios.defaults.withCredentials = true;
 
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:3000/api/profile" : "/api/profile";
+const ATTENDANCE_API_URL = import.meta.env.MODE === "development" ? "http://localhost:3000/api/attendance" : "/api/attendance";
 
 export default function EmployeesListPage() {
     const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function EmployeesListPage() {
     const { getTodayStatus, checkIn, checkOut, isCheckingIn, isCheckingOut, fetchMyAttendance } = useAttendanceStore();
     
     const [employees, setEmployees] = useState([]);
+    const [attendanceData, setAttendanceData] = useState({});
+    const [leaveData, setLeaveData] = useState({});
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -26,18 +29,57 @@ export default function EmployeesListPage() {
     const hasCheckedOut = !!todayStatus?.checkOut;
 
     useEffect(() => {
-        const fetchEmployees = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
             try {
                 if (isAdmin) {
-                    const response = await axios.get(`${API_URL}`);
-                    setEmployees(response.data.data || []);
+                    // Fetch all employees
+                    const employeesRes = await axios.get(`${API_URL}`);
+                    const employeesList = employeesRes.data.data || [];
+                    setEmployees(employeesList);
+
+                    // Fetch today's attendance for all employees
+                    const today = new Date().toISOString().split('T')[0];
+                    const attendanceRes = await axios.get(`${ATTENDANCE_API_URL}/all?startDate=${today}&endDate=${today}`);
+                    const attendances = attendanceRes.data.data || [];
+                    
+                    // Fetch active leaves
+                    const leavesRes = await axios.get('http://localhost:3000/api/leaves').catch(() => ({ data: { data: [] } }));
+                    const leaves = leavesRes.data.data || [];
+
+                    // Map attendance by userId for today
+                    const attendanceMap = {};
+                    attendances.forEach(att => {
+                        if (att.user?._id) {
+                            // Check if employee has checked in (has checkIn time or status is PRESENT)
+                            if (att.checkIn || att.status === 'PRESENT') {
+                                attendanceMap[att.user._id] = 'Present';
+                            } else {
+                                attendanceMap[att.user._id] = att.status || 'Absent';
+                            }
+                        }
+                    });
+                    setAttendanceData(attendanceMap);
+
+                    // Map active leaves by userId
+                    const leaveMap = {};
+                    const todayDate = new Date();
+                    leaves.forEach(leave => {
+                        if ((leave.status === 'APPROVED' || leave.status === 'Approved') && leave.user?._id) {
+                            const startDate = new Date(leave.startDate);
+                            const endDate = new Date(leave.endDate);
+                            if (todayDate >= startDate && todayDate <= endDate) {
+                                leaveMap[leave.user._id] = leave.leaveType;
+                            }
+                        }
+                    });
+                    setLeaveData(leaveMap);
                 } else {
                     const response = await axios.get(`${API_URL}/me`);
                     setEmployees(response.data.data ? [response.data.data] : []);
                 }
             } catch (error) {
-                console.error('Error fetching employees:', error);
+                console.error('Error fetching data:', error);
                 if (error?.response?.status !== 404) {
                     toast.error('Failed to load employees');
                 }
@@ -48,7 +90,7 @@ export default function EmployeesListPage() {
         };
 
         if (user) {
-            fetchEmployees();
+            fetchData();
             fetchMyAttendance();
         }
     }, [user, isAdmin, fetchMyAttendance]);
@@ -74,6 +116,18 @@ export default function EmployeesListPage() {
         const query = searchQuery.toLowerCase();
         return userName.includes(query) || userEmail.includes(query);
     });
+
+    // Get status indicator for employee
+    const getEmployeeStatus = (userId) => {
+        if (leaveData[userId]) {
+            return { type: 'leave', icon: Plane, color: 'text-blue-500', label: 'On Leave' };
+        }
+        const attendance = attendanceData[userId];
+        if (attendance === 'Present') {
+            return { type: 'present', icon: Circle, color: 'text-green-500', label: 'Present' };
+        }
+        return { type: 'absent', icon: Circle, color: 'text-yellow-500', label: 'Absent' };
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -119,34 +173,50 @@ export default function EmployeesListPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {filteredEmployees.map((emp, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => navigate(`/employee/${emp.user?._id || 'me'}`)}
-                                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 group-hover:scale-110 transition-transform">
-                                            {emp.user?.name?.charAt(0) || 'U'}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600">
-                                                {emp.user?.name || 'Unknown'}
-                                            </h3>
-                                            <p className="text-sm text-gray-600 truncate">{emp.designation || 'No designation'}</p>
-                                            <p className="text-xs text-gray-500 mt-1 truncate">{emp.user?.email}</p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
-                                                    {emp.department || 'N/A'}
-                                                </span>
-                                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
-                                                    {emp.user?.employeeId}
-                                                </span>
+                            {filteredEmployees.map((emp, idx) => {
+                                const status = isAdmin ? getEmployeeStatus(emp.user?._id) : null;
+                                const StatusIcon = status?.icon;
+                                
+                                return (
+                                    <div
+                                        key={idx}
+                                        onClick={() => navigate(`/employee/${emp.user?._id || 'me'}`)}
+                                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group relative"
+                                    >
+                                        {/* Status Indicator - Top Right */}
+                                        {isAdmin && status && (
+                                            <div className="absolute top-4 right-4" title={status.label}>
+                                                {status.type === 'leave' ? (
+                                                    <StatusIcon className={`h-5 w-5 ${status.color}`} />
+                                                ) : (
+                                                    <StatusIcon className={`h-4 w-4 ${status.color} fill-current`} />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-start gap-4">
+                                            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 group-hover:scale-110 transition-transform">
+                                                {emp.user?.name?.charAt(0) || 'U'}
+                                            </div>
+                                            <div className="flex-1 min-w-0 pr-8">
+                                                <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600">
+                                                    {emp.user?.name || 'Unknown'}
+                                                </h3>
+                                                <p className="text-sm text-gray-600 truncate">{emp.designation || 'No designation'}</p>
+                                                <p className="text-xs text-gray-500 mt-1 truncate">{emp.user?.email}</p>
+                                                <div className="mt-3 flex items-center gap-2">
+                                                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
+                                                        {emp.department || 'N/A'}
+                                                    </span>
+                                                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
+                                                        {emp.user?.employeeId}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

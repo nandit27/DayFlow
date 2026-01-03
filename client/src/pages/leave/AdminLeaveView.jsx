@@ -54,8 +54,8 @@ export default function AdminLeaveView() {
                 leave.status !== filterStatus.toUpperCase()) return false;
             if (searchQuery.trim()) {
                 const query = searchQuery.toLowerCase();
-                const employeeName = leave.employee?.name?.toLowerCase() || '';
-                const employeeId = leave.employee?.employeeId?.toLowerCase() || '';
+                const employeeName = leave.user?.name?.toLowerCase() || '';
+                const employeeId = leave.user?.employeeId?.toLowerCase() || '';
                 return employeeName.includes(query) || employeeId.includes(query);
             }
             return true;
@@ -206,15 +206,15 @@ export default function AdminLeaveView() {
                                     {/* Employee Info */}
                                     <div className="flex items-start gap-4 flex-1">
                                         <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                                            {leave.employee?.name?.charAt(0) || 'U'}
+                                            {leave.user?.name?.charAt(0) || 'U'}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <h3 className="text-lg font-semibold text-gray-900">
-                                                    {leave.employee?.name || 'Unknown'}
+                                                    {leave.user?.name || 'Unknown'}
                                                 </h3>
                                                 <span className="text-sm text-gray-500">
-                                                    {leave.employee?.employeeId}
+                                                    {leave.user?.employeeId}
                                                 </span>
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(leave.status)}`}>
                                                     {getStatusIcon(leave.status)}
