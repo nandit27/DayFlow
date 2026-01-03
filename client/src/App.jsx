@@ -12,8 +12,12 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import AttendanceModule from "./pages/attendance/AttendanceModule";
-import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import EmployeesListPage from "./pages/employee/EmployeesListPage";
 import EmployeeProfileView from "./pages/employee/EmployeeProfileView";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard2";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import LeaveModule from "./pages/leave/LeaveModule";
+import PayrollModule from "./pages/payroll/PayrollModule";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -27,15 +31,24 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// redirect authenticated users to the home page
+// redirect authenticated users to the appropriate dashboard
 const RedirectAuthenticatedUser = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore();
 
   if (isAuthenticated && user.isVerified) {
-    return <Navigate to="/" replace />;
+    // Redirect to role-based dashboard
+    const isAdmin = user.role === 'HR' || user.role === 'Admin';
+    return <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} replace />;
   }
 
   return children;
+};
+
+// Component to redirect based on role when accessing root
+const RoleDashboardRedirect = () => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'HR' || user?.role === 'Admin';
+  return <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} replace />;
 };
 
 const AuthLayout = () => {
@@ -84,7 +97,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <HomePage />
+                <RoleDashboardRedirect />
               </ProtectedRoute>
             }
           />
@@ -121,9 +134,29 @@ function App() {
               </RedirectAuthenticatedUser>
             }
           />
-          <Route path="*" element={<NotFound />} />
         </Route>
 
+        {/* Employee Dashboard */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Admin Dashboard */}
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Attendance Module */}
         <Route 
           path="/attendance" 
           element={
@@ -132,14 +165,24 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        {/* Employees List (Admin: all employees, Employee: self) */}
         <Route 
-          path="/employee" 
+          path="/employees" 
           element={
             <ProtectedRoute>
-              <EmployeeDashboard />
+              <EmployeesListPage />
             </ProtectedRoute>
           } 
         />
+
+        {/* Legacy route - redirect to new employees route */}
+        <Route 
+          path="/employee" 
+          element={<Navigate to="/employees" replace />} 
+        />
+
+        {/* Employee Profile View */}
         <Route 
           path="/employee/:id" 
           element={
@@ -148,6 +191,39 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+        {/* My Profile shortcut */}
+        <Route 
+          path="/employee/me" 
+          element={
+            <ProtectedRoute>
+              <EmployeeProfileView />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Leaves Module */}
+        <Route 
+          path="/leaves" 
+          element={
+            <ProtectedRoute>
+              <LeaveModule />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Payroll Module */}
+        <Route 
+          path="/payroll" 
+          element={
+            <ProtectedRoute>
+              <PayrollModule />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
