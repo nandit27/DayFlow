@@ -104,8 +104,6 @@ export const useAttendanceStore = create((set, get) => ({
 
       const response = await axios.get(`${API_URL}/my?${params.toString()}`);
 
-      console.log('📡 fetchMyAttendance response:', response.data);
-
       set({
         myAttendance: response.data.data,
         pagination: response.data.pagination || get().pagination,
@@ -134,13 +132,6 @@ export const useAttendanceStore = create((set, get) => ({
     const todayRecord = get().myAttendance.find(
       (record) => record.date.split("T")[0] === today
     );
-    console.log('🔍 getTodayStatus Debug:', {
-      today,
-      myAttendance: get().myAttendance,
-      todayRecord,
-      checkIn: todayRecord?.checkIn,
-      checkOut: todayRecord?.checkOut
-    });
     return todayRecord || null;
   },
 

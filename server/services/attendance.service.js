@@ -150,8 +150,6 @@ class AttendanceService {
 
       const query = { user: userId };
 
-      console.log('🔍 getMyAttendance - userId:', userId, 'filters:', filters);
-
       // Date range filter
       if (startDate || endDate) {
         query.date = {};
@@ -168,8 +166,6 @@ class AttendanceService {
         query.status = status;
       }
 
-      console.log('🔍 getMyAttendance - final query:', query);
-
       const skip = (page - 1) * limit;
 
       const [records, total] = await Promise.all([
@@ -181,9 +177,6 @@ class AttendanceService {
           .limit(limit),
         Attendance.countDocuments(query),
       ]);
-
-      console.log('📊 getMyAttendance results - count:', records.length, 'total:', total);
-      console.log('📊 Records:', JSON.stringify(records, null, 2));
 
       return {
         records,
