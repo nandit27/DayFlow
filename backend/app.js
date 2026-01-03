@@ -1,11 +1,22 @@
 const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const db = require('./db');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => res.json({message: 'odoogecet backend running'}));
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Routes
+const attendanceRoutes = require('./routes/attendance');
+app.use('/api/attendance', attendanceRoutes);
+
+app.get('/', (req, res) => res.json({ message: 'odoogecet backend running' }));
 
 app.get('/test-db', async (req, res) => {
   try {

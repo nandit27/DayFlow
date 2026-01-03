@@ -1,5 +1,5 @@
 import FloatingShape from "./components/FloatingShape";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
+import AttendanceModule from "./pages/attendance/AttendanceModule";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -35,6 +36,35 @@ const RedirectAuthenticatedUser = ({ children }) => {
   return children;
 };
 
+const AuthLayout = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
+      <FloatingShape
+        color="bg-sky-500"
+        size="w-64 h-64"
+        top="-5%"
+        left="10%"
+        delay={0}
+      />
+      <FloatingShape
+        color="bg-slate-500"
+        size="w-48 h-48"
+        top="70%"
+        left="80%"
+        delay={5}
+      />
+      <FloatingShape
+        color="bg-blue-500"
+        size="w-32 h-32"
+        top="40%"
+        left="-10%"
+        delay={2}
+      />
+      <Outlet />
+    </div>
+  );
+};
+
 function App() {
   const { isCheckingAuth, checkAuth } = useAuthStore();
   useEffect(() => {
@@ -46,35 +76,12 @@ function App() {
   return (
     <>
       <Toaster position="top-center" />
-      <div className="min-h-screen bg-gradient-to-br from-sky-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
-        <FloatingShape
-          color="bg-sky-500"
-          size="w-64 h-64"
-          top="-5%"
-          left="10%"
-          delay={0}
-        />
-        <FloatingShape
-          color="bg-slate-500"
-          size="w-48 h-48"
-          top="70%"
-          left="80%"
-          delay={5}
-        />
-        <FloatingShape
-          color="bg-blue-500"
-          size="w-32 h-32"
-          top="40%"
-          left="-10%"
-          delay={2}
-        />
-
-        <Routes>
+      <Routes>
+        <Route element={<AuthLayout />}>
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                {" "}
                 <HomePage />
               </ProtectedRoute>
             }
@@ -113,8 +120,10 @@ function App() {
             }
           />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+        </Route>
+
+        <Route path="/attendance" element={<AttendanceModule />} />
+      </Routes>
     </>
   );
 }
