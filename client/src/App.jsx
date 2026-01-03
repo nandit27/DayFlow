@@ -16,6 +16,7 @@ import EmployeesListPage from "./pages/employee/EmployeesListPage";
 import EmployeeProfileView from "./pages/employee/EmployeeProfileView";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard2";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import LeaveModule from "./pages/leave/LeaveModule";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -200,32 +201,22 @@ function App() {
           } 
         />
 
-        {/* Leaves Module (Placeholder) */}
+        {/* Leaves Module */}
         <Route 
           path="/leaves" 
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Leave Management</h1>
-                  <p className="text-gray-600">Coming Soon</p>
-                </div>
-              </div>
+              <LeaveModule />
             </ProtectedRoute>
           } 
         />
 
-        {/* Payroll Module (Placeholder) */}
+        {/* Leaves Module */}
         <Route 
-          path="/payroll" 
+          path="/leaves" 
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Payroll Management</h1>
-                  <p className="text-gray-600">Coming Soon</p>
-                </div>
-              </div>
+              <LeaveModule />
             </ProtectedRoute>
           } 
         />

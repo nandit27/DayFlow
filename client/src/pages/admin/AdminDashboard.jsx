@@ -34,13 +34,15 @@ export default function AdminDashboard() {
     const fetchDashboardStats = async () => {
         setIsLoading(true);
         try {
-            const [profilesRes, attendanceRes] = await Promise.all([
+            const [profilesRes, attendanceRes, leavesRes] = await Promise.all([
                 axios.get(`${API_URL}/profile`),
-                axios.get(`${API_URL}/attendance/all`)
+                axios.get(`${API_URL}/attendance/all`),
+                axios.get(`${API_URL}/leaves`).catch(() => ({ data: { data: [] } })) // Graceful fallback
             ]);
 
             const employees = profilesRes.data.data || [];
             const attendances = attendanceRes.data.data || [];
+            const leaves = leavesRes.data.data || [];
 
             const today = new Date().toISOString().split('T')[0];
             const todayAttendances = attendances.filter(att => 
@@ -51,7 +53,7 @@ export default function AdminDashboard() {
                 totalEmployees: employees.length,
                 presentToday: todayAttendances.filter(att => att.status === 'Present').length,
                 onLeave: todayAttendances.filter(att => att.status === 'On Leave').length,
-                pendingLeaves: 0 // Will be updated when leave module is integrated
+                pendingLeaves: leaves.filter(leave => leave.status === 'Pending').length
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
