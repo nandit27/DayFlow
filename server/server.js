@@ -11,6 +11,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import authRouter from "./routes/auth.route.js";
 import employeeProfileRouter from "./routes/employeeProfile.route.js";
 import attendanceRouter from "./routes/attendance.route.js";
+import leaveRouter from "./routes/leave.route.js";
 import { globalRateLimiter } from "./middlewares/rateLimiter.js";
 
 dotenv.config({
@@ -38,6 +39,7 @@ app.use(globalRateLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/profile", employeeProfileRouter);
 app.use("/api/attendance", attendanceRouter);
+app.use("/api/leaves", leaveRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));
