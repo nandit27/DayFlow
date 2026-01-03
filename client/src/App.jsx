@@ -124,9 +124,30 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        <Route path="/attendance" element={<AttendanceModule />} />
-        <Route path="/employee" element={<EmployeeDashboard />} />
-        <Route path="/employee/:id" element={<EmployeeProfileView />} />
+        <Route 
+          path="/attendance" 
+          element={
+            <ProtectedRoute>
+              <AttendanceModule />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/employee" 
+          element={
+            <ProtectedRoute>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/employee/:id" 
+          element={
+            <ProtectedRoute>
+              <EmployeeProfileView />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </>
   );

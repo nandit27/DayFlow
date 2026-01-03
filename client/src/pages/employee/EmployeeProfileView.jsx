@@ -1,13 +1,38 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronDown, User, LogOut, Search, MapPin, Building, Mail, Phone, Calendar } from 'lucide-react';
+import {
+    ChevronDown,
+    User,
+    LogOut,
+    Search,
+    MapPin,
+    Building,
+    Mail,
+    Phone,
+    Calendar,
+    Edit2,
+    Save,
+    X,
+    Loader2
+} from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useProfileStore } from '@/store/profileStore';
+import { format } from 'date-fns';
 
 export default function EmployeeProfileView() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { user, logout } = useAuthStore();
+    const { myProfile, isLoading, isUpdating, fetchMyProfile, updateMyProfile } = useProfileStore();
+
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Resume');
-    const [userRole, setUserRole] = useState('admin'); // 'admin' or 'employee'
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Simulated Role for Demo (can be synced with user.role later)
+    const isAdmin = user?.role === 'Admin' || user?.role === 'HR';
+    const isOwnProfile = id === 'me' || (user && id === user._id);
+    const isNewEmployee = id === 'new';
 
     // Salary Input
     const [monthWage, setMonthWage] = useState(50000);
@@ -43,71 +68,7 @@ export default function EmployeeProfileView() {
         };
     }, [monthWage]);
 
-
-    const isNewEmployee = id === 'new';
-    const isOwnProfile = id === 'me';
-
     // Data Templates
-    const emptyData = {
-        name: "",
-        role: "",
-        loginId: "",
-        email: "",
-        mobile: "",
-        company: "Tech Solutions Inc.",
-        department: "",
-        manager: "",
-        location: "",
-        about: "",
-        jobLove: "",
-        hobbies: "",
-        skills: [],
-        certifications: [],
-        dob: "",
-        address: "",
-        nationality: "",
-        personalEmail: "",
-        gender: "",
-        maritalStatus: "",
-        doj: "",
-        bankAccount: "",
-        bankName: "",
-        ifsc: "",
-        pan: "",
-        uan: "",
-        empCode: ""
-    };
-
-    const jenilData = {
-        name: "Jenil",
-        role: "Software Engineer",
-        loginId: "jenil07",
-        email: "jenil07@company.com",
-        mobile: "+91 98765 43210",
-        company: "Tech Solutions Inc.",
-        department: "Engineering",
-        manager: "Sarah Conner",
-        location: "Ahmedabad, India",
-        about: "Passionate software engineer with a focus on full-stack development. Love building scalable applications and learning new technologies.",
-        jobLove: "I love the challenge of solving complex problems and the continuous learning environment.",
-        hobbies: "Coding, Gaming, Reading Tech Blogs",
-        skills: ["React", "Node.js", "Python", "UI/UX Design"],
-        certifications: ["AWS Certified Developer", "Meta Frontend Developer"],
-        dob: "15 Aug 1995",
-        address: "123, Maple Street, Thaltej, Ahmedabad",
-        nationality: "Indian",
-        personalEmail: "jenil.personal@gmail.com",
-        gender: "Male",
-        maritalStatus: "Single",
-        doj: "01 Jan 2020",
-        bankAccount: "1234567890",
-        bankName: "HDFC Bank",
-        ifsc: "HDFC0001234",
-        pan: "ABCDE1234F",
-        uan: "100200300400",
-        empCode: "EMP001"
-    };
-
     const jayPatelData = {
         name: "Jay Patel",
         role: "Senior Developer",
@@ -138,18 +99,109 @@ export default function EmployeeProfileView() {
         empCode: "EMP002"
     };
 
-    const getInitialData = () => {
-        if (isNewEmployee) return emptyData;
-        if (isOwnProfile) return jenilData;
-        return jayPatelData;
+    // Form Data state for editing
+    const [formData, setFormData] = useState({
+        name: "",
+        department: "",
+        designation: "",
+        address: "",
+        personalEmail: "",
+        mobile: "",
+        dob: "",
+        gender: "",
+        maritalStatus: "",
+        bankAccount: "",
+        bankName: "",
+        ifsc: "",
+        pan: "",
+        uan: "",
+        empCode: ""
+    });
+
+    // Fetch profile on mount if "me"
+    useEffect(() => {
+        if (isOwnProfile) {
+            fetchMyProfile();
+        }
+    }, [isOwnProfile, fetchMyProfile]);
+
+    // Determine what data to show
+    const displayData = useMemo(() => {
+        if (isNewEmployee) return {};
+        if (isOwnProfile && myProfile) {
+            return {
+                ...myProfile,
+                name: user?.name,
+                email: user?.email,
+                role: user?.role,
+                loginId: user?.employeeId,
+                mobile: user?.phone,
+                // Map store fields to view fields
+                department: myProfile.department || "Engineering",
+                location: "Ahmedabad, India",
+                about: myProfile.about || "Passionate software engineer building DayFlow.",
+                jobLove: "Building tools that help people work better.",
+                hobbies: "Coding, Traveling, Reading",
+                skills: ["React", "Node.js", "MongoDB"],
+                certifications: [],
+                dob: myProfile.dateOfBirth ? format(new Date(myProfile.dateOfBirth), 'dd MMM yyyy') : "N/A",
+                personalEmail: user?.email, // Fallback
+                gender: myProfile.gender || "Not set",
+                maritalStatus: "Single",
+                doj: myProfile.joiningDate ? format(new Date(myProfile.joiningDate), 'dd MMM yyyy') : "N/A",
+            };
+        }
+        return jayPatelData; // Mock for anyone else
+    }, [id, isOwnProfile, myProfile, user]);
+
+    // Initialize formData when profile/displayData changes
+    useEffect(() => {
+        if (displayData) {
+            setFormData({
+                name: displayData.name || "",
+                department: displayData.department || "",
+                designation: displayData.role || "",
+                address: displayData.address || "",
+                personalEmail: displayData.personalEmail || "",
+                mobile: displayData.mobile || "",
+                dob: displayData.dob || "",
+                gender: displayData.gender || "",
+                maritalStatus: displayData.maritalStatus || "",
+                bankAccount: displayData.bankAccount || "",
+                bankName: displayData.bankName || "",
+                ifsc: displayData.ifsc || "",
+                pan: displayData.pan || "",
+                uan: displayData.uan || "",
+                empCode: displayData.empCode || ""
+            });
+        }
+    }, [displayData]);
+
+    const handleSaveProfile = async () => {
+        if (!isOwnProfile) return;
+
+        const updates = {
+            address: formData.address,
+            department: formData.department,
+            gender: formData.gender,
+            // Add other fields supported by store/backend
+        };
+
+        const result = await updateMyProfile(updates);
+        if (result.success) {
+            setIsEditing(false);
+        }
     };
 
-    const [employeeData, setEmployeeData] = useState(getInitialData);
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        // Reset form data is handled by displayData useEffect
+    };
 
-    // Update data when ID changes
-    useMemo(() => {
-        setEmployeeData(getInitialData());
-    }, [id]);
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
 
     const handleNavigation = (tab) => {
         if (tab === 'Attendance') {
@@ -165,13 +217,22 @@ export default function EmployeeProfileView() {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(amount);
     }
 
+    if (isOwnProfile && isLoading && !myProfile) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-4" />
+                <p className="text-gray-500">Loading your profile...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-white font-sans text-gray-900">
 
-            {/* Top Navigation Bar (Copied to maintain consistency) */}
+            {/* Top Navigation Bar */}
             <div className="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white sticky top-0 z-50">
                 <div className="flex items-center gap-8">
-                    <div className="text-xl font-bold tracking-tight">Company Logo</div>
+                    <div className="text-xl font-bold tracking-tight">DayFlow</div>
 
                     <nav className="hidden md:flex items-center gap-4">
                         {['Employees', 'Attendance', 'Time Off'].map((item) => (
@@ -190,17 +251,15 @@ export default function EmployeeProfileView() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Status Dot */}
-                    <div className={`h-3 w-3 rounded-full ${userRole === 'admin' ? 'bg-blue-600' : 'bg-red-500'}`} />
-
                     <div className="relative">
                         <button
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                         >
                             <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 text-xs font-bold">
-                                JE
+                                {user?.name?.charAt(0) || displayData?.name?.charAt(0) || 'U'}
                             </div>
+                            <span className="text-sm font-medium hidden md:block">{user?.name || displayData?.name}</span>
                             <ChevronDown className={`h-4 w-4 text-gray-500 duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                         </button>
 
@@ -213,24 +272,10 @@ export default function EmployeeProfileView() {
                                     <User className="h-4 w-4" /> My Profile
                                 </button>
                                 <div className="h-px bg-gray-100 my-1" />
-                                {/* Role Toggle for Demo */}
-                                <div className="px-4 py-2 text-xs text-gray-400 uppercase font-bold tracking-wider">
-                                    Simulate Role
-                                </div>
                                 <button
-                                    onClick={() => { setUserRole('admin'); setIsProfileOpen(false); }}
-                                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${userRole === 'admin' ? 'text-blue-600 font-medium bg-blue-50' : 'text-gray-600'}`}
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
                                 >
-                                    Admin
-                                </button>
-                                <button
-                                    onClick={() => { setUserRole('employee'); setIsProfileOpen(false); }}
-                                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${userRole === 'employee' ? 'text-green-600 font-medium bg-green-50' : 'text-gray-600'}`}
-                                >
-                                    Employee
-                                </button>
-                                <div className="h-px bg-gray-100 my-1" />
-                                <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left">
                                     <LogOut className="h-4 w-4" /> Log Out
                                 </button>
                             </div>
@@ -242,72 +287,116 @@ export default function EmployeeProfileView() {
             {/* Profile Content */}
             <div className="max-w-7xl mx-auto p-6">
 
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row gap-8 mb-8 pb-8 border-b border-gray-200">
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
-                        <div className="h-32 w-32 rounded-full bg-red-100 flex items-center justify-center border-4 border-white shadow-sm ring-1 ring-gray-200 relative">
-                            {isNewEmployee ? <User className="h-12 w-12 text-red-400" /> : <span className="text-4xl text-red-400">✏️</span>}
-                            <div className="absolute bottom-1 right-1 bg-green-500 h-4 w-4 rounded-full border-2 border-white"></div>
+                {/* Header with Edit Button for Own Profile */}
+                <div className="flex justify-between items-start mb-8 border-b border-gray-200 pb-8">
+                    <div className="flex flex-col md:flex-row gap-8">
+                        {/* Avatar */}
+                        <div className="flex-shrink-0">
+                            <div className="h-32 w-32 rounded-full bg-blue-100 flex items-center justify-center border-4 border-white shadow-sm ring-1 ring-gray-200 relative">
+                                {isNewEmployee ? (
+                                    <User className="h-12 w-12 text-blue-400" />
+                                ) : (
+                                    <span className="text-4xl text-blue-600 font-bold">
+                                        {displayData?.name?.charAt(0) || 'U'}
+                                    </span>
+                                )}
+                                <div className="absolute bottom-1 right-1 bg-green-500 h-4 w-4 rounded-full border-2 border-white"></div>
+                            </div>
+                            <div className="mt-2 text-center">
+                                {isNewEmployee ? (
+                                    <input
+                                        type="text"
+                                        placeholder="Name"
+                                        className="text-center bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm w-full"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                ) : (
+                                    <span className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                                        {displayData?.department || "Employee"}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div className="mt-2 text-center">
-                            {isNewEmployee ? (
-                                <input type="text" placeholder="Name" className="text-center bg-gray-50 border border-gray-200 rounded px-2 py-1 text-sm w-full" />
+
+                        {/* Basic Info Grid */}
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <h1 className="text-3xl font-serif text-gray-900 italic border-b border-gray-300 pb-1 mb-4">
+                                        {isNewEmployee ? "New Employee" : displayData?.name}
+                                    </h1>
+                                </div>
+
+                                <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm">Employee ID</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.loginId || "N/A"}</span>
+
+                                    <span className="text-gray-500 text-sm">Email</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.email || "N/A"}</span>
+
+                                    <span className="text-gray-500 text-sm">Phone</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.mobile || "N/A"}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-4 md:pt-0">
+                                <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+                                    <span className="text-gray-500 text-sm">Company</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.company || "DayFlow Corp"}</span>
+
+                                    <span className="text-gray-500 text-sm">Department</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.department || "N/A"}</span>
+
+                                    <span className="text-gray-500 text-sm">Manager</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.manager || "Sarah Conner"}</span>
+
+                                    <span className="text-gray-500 text-sm">Location</span>
+                                    <span className="text-gray-900 border-b border-gray-200 pb-1">{displayData?.location || "India"}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Edit controls if owner */}
+                    {isOwnProfile && (
+                        <div className="flex-shrink-0">
+                            {!isEditing ? (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                    <span>Edit Profile</span>
+                                </button>
                             ) : (
-                                <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                                    {employeeData.name}
-                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        <span>Cancel</span>
+                                    </button>
+                                    <button
+                                        onClick={handleSaveProfile}
+                                        disabled={isUpdating}
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                                    >
+                                        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                        <span>Save</span>
+                                    </button>
+                                </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Basic Info Grid */}
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                        <div className="space-y-4">
-                            <div>
-                                <h1 className="text-3xl font-serif text-gray-900 italic border-b border-gray-300 pb-1 mb-4 flex justify-between items-baseline">
-                                    {employeeData.name}
-                                </h1>
-                            </div>
-
-                            <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-                                <span className="text-gray-500 text-sm">Login ID</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.loginId}</span>
-
-                                <span className="text-gray-500 text-sm">Email</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.email}</span>
-
-                                <span className="text-gray-500 text-sm">Mobile</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.mobile}</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 pt-4 md:pt-0">
-                            <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-                                <span className="text-gray-500 text-sm">Company</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.company}</span>
-
-                                <span className="text-gray-500 text-sm">Department</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.department}</span>
-
-                                <span className="text-gray-500 text-sm">Manager</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.manager}</span>
-
-                                <span className="text-gray-500 text-sm">Location</span>
-                                <span className="text-gray-900 border-b border-gray-200 pb-1">{employeeData.location}</span>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200 mb-6">
                     <div className="flex gap-8">
                         {['Resume', 'Private Info', 'Salary Info', 'Security'].map((tab) => {
-                            const isOwnProfile = id === 'me' || id === 'new'; // 'new' also needs all tabs to fill info
-                            const isAdmin = userRole === 'admin';
                             const isSensitive = tab === 'Salary Info' || tab === 'Security' || tab === 'Private Info';
-
                             if (isSensitive && !isAdmin && !isOwnProfile) return null;
 
                             return (
@@ -328,27 +417,27 @@ export default function EmployeeProfileView() {
 
                 {/* Tab Content - Resume */}
                 {activeTab === 'Resume' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="animate-in fade-in duration-300 grid grid-cols-1 lg:grid-cols-2 gap-12">
                         {/* Left Column */}
                         <div className="space-y-8">
                             <section>
                                 <h3 className="text-xl font-serif text-gray-900 mb-3 italic">About</h3>
                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                    {employeeData.about}
+                                    {displayData?.about}
                                 </p>
                             </section>
 
                             <section>
                                 <h3 className="text-xl font-serif text-gray-900 mb-3 italic">What I love about my job</h3>
                                 <p className="text-gray-600 text-sm leading-relaxed border-l-2 border-gray-200 pl-4 italic">
-                                    {employeeData.jobLove}
+                                    {displayData.jobLove}
                                 </p>
                             </section>
 
                             <section>
                                 <h3 className="text-xl font-serif text-gray-900 mb-3 italic">My interests and hobbies</h3>
                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                    {employeeData.hobbies}
+                                    {displayData.hobbies}
                                 </p>
                             </section>
                         </div>
@@ -358,24 +447,24 @@ export default function EmployeeProfileView() {
                             <section className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wider text-xs">Skills</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {employeeData.skills.map(skill => (
+                                    {displayData.skills?.map(skill => (
                                         <span key={skill} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-700 shadow-sm">
                                             {skill}
                                         </span>
                                     ))}
-                                    <button className="px-3 py-1 text-sm text-blue-600 hover:underline">+ Add Skills</button>
+                                    {isOwnProfile && <button className="px-3 py-1 text-sm text-blue-600 hover:underline">+ Add Skills</button>}
                                 </div>
                             </section>
 
                             <section className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wider text-xs">Certifications</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {employeeData.certifications.map(cert => (
+                                    {displayData.certifications?.map(cert => (
                                         <span key={cert} className="px-3 py-1 bg-white border border-green-200 text-green-700 rounded-full text-sm shadow-sm">
                                             {cert}
                                         </span>
                                     ))}
-                                    <button className="px-3 py-1 text-sm text-blue-600 hover:underline">+ Add</button>
+                                    {isOwnProfile && <button className="px-3 py-1 text-sm text-blue-600 hover:underline">+ Add</button>}
                                 </div>
                             </section>
                         </div>
@@ -383,38 +472,47 @@ export default function EmployeeProfileView() {
                 )}
 
                 {/* Tab Content - Private Info */}
-                {activeTab === 'Private Info' && (userRole === 'admin' || id === 'me' || id === 'new') && (
+                {activeTab === 'Private Info' && (isAdmin || isOwnProfile) && (
                     <div className="animate-in fade-in duration-300 grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-12">
                         {/* Left Column - Personal Details */}
                         <div className="space-y-8">
+                            <h3 className="text-gray-900 font-medium text-lg border-b border-gray-200 pb-2">Personal Details</h3>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Date of Birth</span>
-                                    <input type="text" defaultValue={employeeData.dob} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    {isEditing ? (
+                                        <input type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} className="w-full border-b border-blue-500 py-1 px-2 text-gray-900 bg-blue-50 focus:outline-none" />
+                                    ) : (
+                                        <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.dob}</span>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Residing Address</span>
-                                    <input type="text" defaultValue={employeeData.address} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-                                    <span className="text-gray-500 text-sm font-medium">Nationality</span>
-                                    <input type="text" defaultValue={employeeData.nationality} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    {isEditing ? (
+                                        <input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full border-b border-blue-500 py-1 px-2 text-gray-900 bg-blue-50 focus:outline-none" />
+                                    ) : (
+                                        <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.address}</span>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Personal Email</span>
-                                    <input type="text" defaultValue={employeeData.personalEmail} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    {isEditing ? (
+                                        <input type="email" value={formData.personalEmail} onChange={(e) => setFormData({ ...formData, personalEmail: e.target.value })} className="w-full border-b border-blue-500 py-1 px-2 text-gray-900 bg-blue-50 focus:outline-none" />
+                                    ) : (
+                                        <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.personalEmail}</span>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Gender</span>
-                                    <input type="text" defaultValue={employeeData.gender} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-                                    <span className="text-gray-500 text-sm font-medium">Marital Status</span>
-                                    <input type="text" defaultValue={employeeData.maritalStatus} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-                                    <span className="text-gray-500 text-sm font-medium">Date of Joining</span>
-                                    <input type="text" defaultValue={employeeData.doj} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    {isEditing ? (
+                                        <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })} className="w-full border-b border-blue-500 py-1 px-2 text-gray-900 bg-blue-50 focus:outline-none">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    ) : (
+                                        <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.gender}</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -425,34 +523,27 @@ export default function EmployeeProfileView() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Account Number</span>
-                                    <input type="text" defaultValue={employeeData.bankAccount} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 font-mono">•••• •••• {displayData.bankAccount?.slice(-4) || "0000"}</span>
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Bank Name</span>
-                                    <input type="text" defaultValue={employeeData.bankName} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-                                    <span className="text-gray-500 text-sm font-medium">IFSC Code</span>
-                                    <input type="text" defaultValue={employeeData.ifsc} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.bankName || "HDFC Bank"}</span>
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">PAN No</span>
-                                    <input type="text" defaultValue={employeeData.pan} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
-                                </div>
-                                <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-                                    <span className="text-gray-500 text-sm font-medium">UAN NO</span>
-                                    <input type="text" defaultValue={employeeData.uan} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 uppercase">{displayData.pan || "••••••"}</span>
                                 </div>
                                 <div className="grid grid-cols-[140px_1fr] gap-4 items-center">
                                     <span className="text-gray-500 text-sm font-medium">Emp Code</span>
-                                    <input type="text" defaultValue={employeeData.empCode} className="w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none" />
+                                    <span className="w-full border-b border-gray-300 py-1 px-2 text-gray-900">{displayData.empCode || "EMP001"}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {activeTab === 'Salary Info' && (userRole === 'admin' || id === 'me' || id === 'new') && (
+                {/* Tab Content - Salary Info */}
+                {activeTab === 'Salary Info' && (isAdmin || isOwnProfile) && (
                     <div className="animate-in fade-in duration-300 space-y-12">
                         {/* Top Salary Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-gray-200 pb-8">
@@ -480,37 +571,24 @@ export default function EmployeeProfileView() {
                                 </div>
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-gray-700 font-medium max-w-[150px]">No of working days in a week:</label>
-                                    <input type="text" className="border-b border-gray-300 text-right py-1 px-2 w-32 focus:outline-none focus:border-blue-500" />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <label className="text-gray-700 font-medium">Break Time:</label>
-                                    <div className="flex items-center gap-2">
-                                        <input type="text" className="border-b border-gray-300 text-right py-1 px-2 w-32 focus:outline-none focus:border-blue-500" />
-                                        <span className="text-gray-500 font-mono">/ hrs</span>
-                                    </div>
-                                </div>
+                            <div className="space-y-6 text-sm text-gray-500">
+                                <p>This calculation is based on standard company policy. Standard deductions like PF and Tax are already included in the components check below.</p>
                             </div>
                         </div>
 
                         {/* Salary Components & Deductions */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-
                             {/* Salary Components */}
                             <div className="space-y-8">
                                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Salary Components</h3>
 
                                 <div className="space-y-6">
-                                    {/* Component Row Utility */}
                                     {[
-                                        { label: "Basic Salary", val: salaryComponents.basic, pct: "50.00 %", desc: "Define Basic salary from company cost compute it based on monthly Wages" },
-                                        { label: "House Rent Allowance", val: salaryComponents.hra, pct: "50.00 %", desc: "HRA provided to employees 50% of the basic salary" },
-                                        { label: "Standard Allowance", val: salaryComponents.stdAllowance, pct: "16.67 %", desc: "A standard allowance is a predetermined, fixed amount provided to employee as part of their salary" },
-                                        { label: "Performance Bonus", val: salaryComponents.perfBonus, pct: "8.33 %", desc: "Variable amount paid during payroll. The value defined by the company and calculated as a % of the basic salary" },
-                                        { label: "Leave Travel Allowance", val: salaryComponents.lta, pct: "8.33 %", desc: "LTA is paid by the company to employees to cover their travel expenses, and calculated as a % of the basic salary" },
-                                        { label: "Fixed Allowance", val: salaryComponents.fixedAllowance, pct: "11.67 %", desc: "Fixed allowance portion of wages is determined after calculating all salary components" },
+                                        { label: "Basic Salary", val: salaryComponents.basic, pct: "50.00 %" },
+                                        { label: "House Rent Allowance", val: salaryComponents.hra, pct: "50.00 %" },
+                                        { label: "Standard Allowance", val: salaryComponents.stdAllowance, pct: "16.67 %" },
+                                        { label: "Performance Bonus", val: salaryComponents.perfBonus, pct: "8.33 %" },
+                                        { label: "Fixed Allowance", val: salaryComponents.fixedAllowance, pct: "11.67 %" },
                                     ].map((comp, idx) => (
                                         <div key={idx} className="space-y-2">
                                             <div className="flex items-end justify-between">
@@ -523,7 +601,6 @@ export default function EmployeeProfileView() {
                                                     <span className="font-mono text-gray-900 w-16 text-right border-b border-gray-300 pb-1 text-sm">{comp.pct}</span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-gray-400 italic max-w-md leading-relaxed">{comp.desc}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -531,78 +608,48 @@ export default function EmployeeProfileView() {
 
                             {/* PF & Tax */}
                             <div className="space-y-8">
-                                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Provident Fund (PF) Contribution</h3>
+                                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Deductions</h3>
                                 <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <div className="flex items-end justify-between">
-                                            <span className="text-gray-800 font-medium">Employee</span>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-mono text-gray-900 min-w-[100px] text-right border-b border-gray-300 pb-1">
-                                                    {formatCurrency(salaryComponents.pfEmployee)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">/ month</span>
-                                                <span className="font-mono text-gray-900 w-16 text-right border-b border-gray-300 pb-1 text-sm">12.00 %</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-400 italic">PF is calculated based on the basic salary</p>
+                                    <div className="flex items-end justify-between">
+                                        <span className="text-gray-800 font-medium">PF (Employee 12%)</span>
+                                        <span className="font-mono text-red-600 border-b border-gray-300 pb-1">
+                                            - {formatCurrency(salaryComponents.pfEmployee)}
+                                        </span>
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <div className="flex items-end justify-between">
-                                            <span className="text-gray-800 font-medium">Employer's</span>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-mono text-gray-900 min-w-[100px] text-right border-b border-gray-300 pb-1">
-                                                    {formatCurrency(salaryComponents.pfEmployer)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">/ month</span>
-                                                <span className="font-mono text-gray-900 w-16 text-right border-b border-gray-300 pb-1 text-sm">12.00 %</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-400 italic">PF is calculated based on the basic salary</p>
+                                    <div className="flex items-end justify-between">
+                                        <span className="text-gray-800 font-medium">Professional Tax</span>
+                                        <span className="font-mono text-red-600 border-b border-gray-300 pb-1">
+                                            - {formatCurrency(salaryComponents.profTax)}
+                                        </span>
                                     </div>
-                                </div>
-
-                                <div className="pt-8 space-y-6">
-                                    <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Tax Deduction</h3>
-                                    <div className="space-y-2">
-                                        <div className="flex items-end justify-between">
-                                            <span className="text-gray-800 font-medium">Professional Tax</span>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-mono text-gray-900 min-w-[100px] text-right border-b border-gray-300 pb-1">
-                                                    {formatCurrency(salaryComponents.profTax)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">/ month</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-400 italic">Professional Tax deducted from the Gross salary</p>
+                                    <div className="pt-8 flex items-end justify-between text-lg font-bold">
+                                        <span className="text-gray-900">Net Take Home</span>
+                                        <span className="text-green-600">
+                                            {formatCurrency(monthWage - salaryComponents.pfEmployee - salaryComponents.profTax)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 )}
 
                 {/* Tab Content - Security (Credentials) */}
-                {activeTab === 'Security' && (userRole === 'admin' || id === 'me' || id === 'new') && (
+                {activeTab === 'Security' && (isAdmin || isOwnProfile) && (
                     <div className="animate-in fade-in duration-300 max-w-2xl mx-auto border border-gray-200 rounded-xl p-8 bg-gray-50">
                         <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                             <span className="bg-blue-100 p-2 rounded-lg text-blue-600"><User className="h-5 w-5" /></span>
-                            {id === 'me' ? 'Change Password' : 'Credential Management'}
+                            {isOwnProfile ? 'Change Password' : 'Credential Management'}
                         </h3>
 
                         <div className="space-y-6">
                             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                                <div className="flex">
-                                    <div className="ml-3">
-                                        <p className="text-sm text-yellow-700">
-                                            {id === 'me'
-                                                ? "You can update your password here. Please choose a strong password."
-                                                : "Set up the initial login credentials for the employee. They will be required to change their password upon first login."
-                                            }
-                                        </p>
-                                    </div>
-                                </div>
+                                <p className="text-sm text-yellow-700">
+                                    {isOwnProfile
+                                        ? "You can update your password here. Please choose a strong password."
+                                        : "Set up the initial login credentials for the employee."
+                                    }
+                                </p>
                             </div>
 
                             <div className="space-y-4">
@@ -610,26 +657,24 @@ export default function EmployeeProfileView() {
                                     <span className="text-gray-500 text-sm font-medium">System Login ID</span>
                                     <input
                                         type="text"
-                                        defaultValue={employeeData.loginId || ""}
-                                        placeholder="e.g. jay.patel"
-                                        readOnly={id === 'me' && !(id === 'new')}
-                                        className={`w-full border-b border-gray-300 py-1 px-2 text-gray-900 bg-transparent focus:outline-none ${id === 'me' && !(id === 'new') ? 'text-gray-500 cursor-not-allowed' : 'focus:border-blue-500'}`}
+                                        defaultValue={displayData.loginId || ""}
+                                        readOnly
+                                        className="w-full border-b border-gray-300 py-1 px-2 text-gray-500 bg-transparent focus:outline-none cursor-not-allowed"
                                     />
                                 </div>
                                 <div className="grid grid-cols-[160px_1fr] gap-4 items-center">
-                                    <label className="text-gray-700 font-medium">Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" />
+                                    <label className="text-gray-700 font-medium">New Password</label>
+                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 bg-white" />
                                 </div>
                                 <div className="grid grid-cols-[160px_1fr] gap-4 items-center">
                                     <label className="text-gray-700 font-medium">Confirm Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" />
+                                    <input type="password" placeholder="••••••••" className="w-full border border-gray-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 bg-white" />
                                 </div>
                             </div>
 
                             <div className="pt-6 border-t border-gray-200 flex justify-end gap-3">
-                                <button className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
                                 <button className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
-                                    {isNewEmployee ? 'Create Employee' : (id === 'me' ? 'Update Password' : 'Update Credentials')}
+                                    {isOwnProfile ? 'Update Password' : 'Save Credentials'}
                                 </button>
                             </div>
                         </div>
