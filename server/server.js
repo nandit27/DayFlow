@@ -9,6 +9,7 @@ import logger from "./utils/logger.js";
 import connectDB from "./config/mongodb.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import authRouter from "./routes/auth.route.js";
+import employeeProfileRouter from "./routes/employeeProfile.route.js";
 import { globalRateLimiter } from "./middlewares/rateLimiter.js";
 
 dotenv.config({
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(globalRateLimiter);
 
 app.use("/api/auth", authRouter);
+app.use("/api/profile", employeeProfileRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));
