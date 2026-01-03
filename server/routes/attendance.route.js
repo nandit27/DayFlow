@@ -10,6 +10,14 @@ router.post("/check-out", verifyToken, attendanceController.checkOut);
 router.get("/my", verifyToken, attendanceController.getMyAttendance);
 
 // HR Routes - Accessible by HR only
+// Note: /all route MUST come before /:userId to avoid route conflicts
+router.get(
+  "/all",
+  verifyToken,
+  authorizeRoles("HR"),
+  attendanceController.getAllAttendance
+);
+
 router.get(
   "/",
   verifyToken,

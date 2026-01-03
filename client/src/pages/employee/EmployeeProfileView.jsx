@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronDown, User, LogOut, Loader2, Edit2, Save, X } from 'lucide-react';
+import { Loader2, Edit2, Save, X } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import { useAuthStore } from '@/store/authStore';
 import { useProfileStore } from '@/store/profileStore';
 import { format } from 'date-fns';
 
 export default function EmployeeProfileView() {
-    const navigate = useNavigate();
-    const { user, logout } = useAuthStore();
+    const { user } = useAuthStore();
     const { myProfile, isLoading, isUpdating, fetchMyProfile, updateMyProfile } = useProfileStore();
     
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('Personal Info');
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
@@ -37,11 +35,6 @@ export default function EmployeeProfileView() {
         }
     }, [myProfile]);
 
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
-
     const handleSaveProfile = async () => {
         const updates = {
             ...formData,
@@ -67,76 +60,9 @@ export default function EmployeeProfileView() {
         setIsEditing(false);
     };
 
-    const handleNavigation = (tab) => {
-        if (tab === 'Attendance') {
-            navigate('/attendance');
-        } else if (tab === 'Employees') {
-            navigate('/employee');
-        } else if (tab === 'Time Off') {
-            navigate('/attendance');
-        }
-    };
-
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900">
-
-            {/* Top Navigation Bar */}
-            <div className="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white sticky top-0 z-50">
-                <div className="flex items-center gap-8">
-                    <div className="text-xl font-bold tracking-tight">DayFlow</div>
-
-                    <nav className="hidden md:flex items-center gap-4">
-                        {['Employees', 'Attendance', 'Time Off'].map((item) => (
-                            <button
-                                key={item}
-                                onClick={() => handleNavigation(item)}
-                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${item === 'Employees'
-                                    ? 'bg-gray-100 text-gray-900'
-                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                    }`}
-                            >
-                                {item}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsProfileOpen(!isProfileOpen)}
-                            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
-                        >
-                            <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 text-xs font-bold">
-                                {user?.name?.charAt(0) || 'U'}
-                            </div>
-                            <span className="text-sm font-medium">{user?.name}</span>
-                            <ChevronDown className={`h-4 w-4 text-gray-500 duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isProfileOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                                <button 
-                                    onClick={() => {
-                                        navigate('/employee/me');
-                                        setIsProfileOpen(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                                >
-                                    <User className="h-4 w-4" /> My Profile
-                                </button>
-                                <div className="h-px bg-gray-100 my-1" />
-                                <button 
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
-                                >
-                                    <LogOut className="h-4 w-4" /> Log Out
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto p-6">
