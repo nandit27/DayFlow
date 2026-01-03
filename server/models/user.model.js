@@ -3,6 +3,17 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
+    employeeId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    companyName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     name: {
       type: String,
       required: true,
@@ -16,11 +27,30 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/.+\@.+\..+/, "Please enter a valid email address"],
     },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     password: {
       type: String,
       required: true,
       trim: true,
       select: false,
+      validate: {
+        validator: function(v) {
+          // Password must contain at least one uppercase, one lowercase, one number, one special character
+          // and be between 8-128 characters
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,128}$/.test(v);
+        },
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be 8-128 characters long'
+      }
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ['Employee', 'HR'],
+      default: 'Employee',
     },
     lastLogin: {
       type: Date,

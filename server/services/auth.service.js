@@ -18,28 +18,109 @@ const generateVerificationToken = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-export const signupUser = async ({ name, email, password }) => {
+// Generate Employee ID in format: OI[FirstTwoLettersOfFirstName][FirstTwoLettersOfLastName][Year][SerialNumber]
+// Example: OIOD20220001 for employee named "Odessa Dooly" joining in 2022
+const generateEmployeeId = async (name, companyName) => {
+  const nameParts = name.trim().split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts[nameParts.length - 1] || nameParts[0];
+  
+  // Get first two letters of first and last name
+  const firstInitials = (firstName.substring(0, 2) || 'XX').toUpperCase();
+  const lastInitials = (lastName.substring(0, 2) || 'XX').toUpperCase();
+  
+  // Get company initials (first two letters)
+  const companyInitials = (companyName.substring(0, 2) || 'OI').toUpperCase();
+  
+  // Get current year
+  const year = new Date().getFullYear();
+  
+  // Find the last employee ID for this year to generate serial number
+  const lastEmployee = await User.findOne({
+    employeeId: new RegExp(`^${companyInitials}${firstInitials}${lastInitials}${year}`, 'i')
+  }).sort({ employeeId: -1 });
+  
+  let serialNumber = 1;
+  if (lastEmployee && lastEmployee.employeeId) {
+    const lastSerial = parseInt(lastEmployee.employeeId.slice(-4));
+    if (!isNaN(lastSerial)) {
+      serialNumber = lastSerial + 1;
+    }
+  }
+  
+  // Format serial number as 4-digit string
+  const serialStr = serialNumber.toString().padStart(4, '0');
+  
+  return `${companyInitials}${firstInitials}${lastInitials}${year}${serialStr}`;
+};
+
+// Validate password strength
+const validatePassword = (password) => {
+  const errors = [];
+  
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  
+  if (password.length > 128) {
+    errors.push('Password must not exceed 128 characters');
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  
+  if (!/[@$!%*?&]/.test(password)) {
+    errors.push('Password must contain at least one special character (@$!%*?&)');
+  }
+  
+  return errors;
+};
+
+export const signupUser = async ({ companyName, name, email, phone, password, role }) => {
   const session = await mongoose.startSession();
   try {
-    await session.withTransaction(async () => {
-      if (!name || !email || !password) {
+    return await session.withTransaction(async () => {
+      // Validate all required fields
+      if (!companyName || !name || !email || !phone || !password) {
         throw new APIError(400, "All fields are required");
       }
 
-      if (password.length < 6) {
-        throw new APIError(400, "Password must be at least 6 characters");
+      // Validate password strength
+      const passwordErrors = validatePassword(password);
+      if (passwordErrors.length > 0) {
+        throw new APIError(400, passwordErrors.join('. '));
       }
 
+      // Check if user already exists
       const existingUser = await User.findOne({ email }).session(session);
       if (existingUser) {
         throw new APIError(400, "User already exists");
       }
 
+      // Generate Employee ID
+      const employeeId = await generateEmployeeId(name, companyName);
+
+      // Generate verification token
       const verificationToken = generateVerificationToken();
+      
+      // Create new user
       const user = new User({
+        employeeId,
+        companyName,
         name,
         email,
+        phone,
         password,
+        role: role || 'Employee', // Default to Employee if not provided
         verificationToken,
         verificationTokenExpiresAt: Date.now() + 1 * 60 * 60 * 1000,
       });

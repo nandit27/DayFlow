@@ -14,13 +14,13 @@ import { generateTokenAndSetCookie } from "../utils/tokenAndSetCookie.js";
 export const signup = async (req, res, next) => {
   logger.info("Signup controller hit...");
   try {
-    const { name, email, password } = req.body;
-    const user = await signupUser({ name, email, password });
+    const { companyName, name, email, phone, password, role } = req.body;
+    const user = await signupUser({ companyName, name, email, phone, password, role });
     generateTokenAndSetCookie(res, user._id);
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "User created successfully. Please verify your email.",
       user: {
         ...user._doc,
         password: undefined,
