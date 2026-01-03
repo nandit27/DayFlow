@@ -55,11 +55,10 @@ const SignUpPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      className="max-w-md w-full bg-gray-800/50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl 
-			overflow-hidden"
+      className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-black overflow-hidden"
     >
       <div className="p-8">
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-sky-400 to-blue-500 text-transparent bg-clip-text">
+        <h2 className="text-3xl font-bold mb-6 text-center text-black">
           Create Account
         </h2>
         <form onSubmit={handleSignUp}>
@@ -98,15 +97,15 @@ const SignUpPage = () => {
           
           {/* Role Selection */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Role
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 bg-opacity-50 rounded-lg border border-gray-700 
-                       focus:border-sky-500 focus:ring-2 focus:ring-sky-500 text-white 
-                       placeholder-gray-400 transition duration-200"
+              className="w-full px-3 py-2 bg-white rounded-lg border border-black 
+                       focus:border-black focus:ring-2 focus:ring-black text-black 
+                       placeholder-black/50 transition duration-200"
               required
             >
               <option value="Employee">Employee</option>
@@ -126,7 +125,7 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-black focus:outline-none"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -144,7 +143,7 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={toggleConfirmPasswordVisibility}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-black focus:outline-none"
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -154,7 +153,7 @@ const SignUpPage = () => {
           <PasswordStrengthMeter password={password} />
 
           <motion.button
-            className="mt-5 w-full py-3 px-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition duration-200"
+            className="mt-5 w-full py-3 px-4 bg-black text-white font-bold rounded-lg shadow-md hover:bg-white hover:text-black border border-black focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
@@ -168,10 +167,10 @@ const SignUpPage = () => {
           </motion.button>
         </form>
       </div>
-      <div className="px-8 py-4 bg-gray-900/50 flex justify-center">
-        <p className="text-sm text-gray-400">
+      <div className="px-8 py-4 bg-white border-t border-black flex justify-center">
+        <p className="text-sm text-black">
           Already have an account?{" "}
-          <Link to={"/login"} className="text-sky-400 hover:underline">
+          <Link to={"/login"} className="text-sm text-black hover:underline">
             Login
           </Link>
         </p>

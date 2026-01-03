@@ -40,23 +40,23 @@ const RedirectAuthenticatedUser = ({ children }) => {
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-900 via-blue-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-white text-black flex items-center justify-center relative overflow-hidden">
       <FloatingShape
-        color="bg-sky-500"
+        color="bg-black"
         size="w-64 h-64"
         top="-5%"
         left="10%"
         delay={0}
       />
       <FloatingShape
-        color="bg-slate-500"
+        color="bg-black"
         size="w-48 h-48"
         top="70%"
         left="80%"
         delay={5}
       />
       <FloatingShape
-        color="bg-blue-500"
+        color="bg-black"
         size="w-32 h-32"
         top="40%"
         left="-10%"

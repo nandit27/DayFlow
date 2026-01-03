@@ -38,13 +38,12 @@ const LoginPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      className="max-w-md w-full bg-gray-800/50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl 
-      overflow-hidden"
+      className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-black overflow-hidden"
     >
       <div className="p-8">
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-sky-400 to-blue-500 text-transparent bg-clip-text">
+        <h2 className="text-3xl font-bold mb-6 text-center text-black">
           Welcome Back
-        </h2>
+        </h2> 
         <form onSubmit={handleLogin}>
           <Input
             icon={Mail}
@@ -64,7 +63,7 @@ const LoginPage = () => {
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-black focus:outline-none"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -73,16 +72,16 @@ const LoginPage = () => {
           <div className="flex items-center mb-6">
             <Link
               to="/forgot-password"
-              className="text-sm text-sky-400 hover:underline"
+              className="text-sm text-black hover:underline"
             >
               Forgot Password?
-            </Link>
+            </Link> 
           </div>
           <motion.button
             type="submit"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-full py-3 px-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold rounded-lg shadow-lg hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition duration-200"
+            className="w-full py-3 px-4 bg-black text-white font-bold rounded-lg shadow-md hover:bg-white hover:text-black border border-black focus:outline-none focus:ring-2 focus:ring-black transition duration-200"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -93,10 +92,10 @@ const LoginPage = () => {
           </motion.button>
         </form>
       </div>
-      <div className="px-8 py-4 bg-gray-900/50 flex justify-center">
-        <p className="text-sm text-gray-400">
+      <div className="px-8 py-4 bg-white border-t border-black flex justify-center">
+        <p className="text-sm text-black">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-sm text-sky-400 hover:underline">
+          <Link to="/signup" className="text-sm text-black hover:underline">
             Sign Up
           </Link>
         </p>

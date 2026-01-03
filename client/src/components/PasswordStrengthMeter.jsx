@@ -23,11 +23,11 @@ const PasswordCriteria = ({ password }) => {
       {criteria.map((item) => (
         <div key={item.label} className="flex items-center text-xs">
           {item.met ? (
-            <Check className="mr-2 text-sky-500 size-4" />
+            <Check className="mr-2 text-black size-4" />
           ) : (
-            <X className="size-4 text-gray-400 mr-2" />
+            <X className="size-4 text-black/60 mr-2" />
           )}
-          <span className={item.met ? "text-sky-500" : "text-gray-400"}>
+          <span className={item.met ? "text-black" : "text-black/60"}>
             {item.label}
           </span>
         </div>
@@ -47,13 +47,7 @@ const PasswordStrengthMeter = ({ password }) => {
   };
   const strength = getStrength(password);
 
-  const getColor = (strength) => {
-    if (strength === 0) return "bg-red-500";
-    if (strength === 1) return "bg-red-400";
-    if (strength === 2) return "bg-yellow-500";
-    if (strength === 3) return "bg-yellow-400";
-    return "bg-green-500";
-  };
+
 
   const getStrengthText = (strength) => {
     if (strength === 0) return "Very Weak";
@@ -65,8 +59,8 @@ const PasswordStrengthMeter = ({ password }) => {
   return (
     <div className="mt-2">
       <div className="flex justify-between items-center mb-1">
-        <span className="text-sm text-gray-400">Password strength</span>
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-black">Password strength</span>
+        <span className="text-sm text-black">
           {getStrengthText(strength)}
         </span>
       </div>
@@ -75,7 +69,7 @@ const PasswordStrengthMeter = ({ password }) => {
           <div
             key={index}
             className={`h-1 w-1/4 rounded-full transition-colors duration-300 ${
-              index < strength ? getColor(strength) : "bg-gray-600"
+              index < strength ? "bg-black" : "bg-white border border-black"
             }`}
           />
         ))}
