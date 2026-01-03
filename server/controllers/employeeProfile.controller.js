@@ -172,6 +172,35 @@ class EmployeeProfileController {
       next(error);
     }
   }
+
+  /**
+   * Create new employee (HR only)
+   * @route POST /api/profile/create-employee
+   * @access Private (HR only)
+   */
+  async createEmployee(req, res, next) {
+    try {
+      const result = await employeeProfileService.createEmployee(req.body);
+
+      res.status(201).json({
+        success: true,
+        message: "Employee created successfully",
+        data: {
+          user: result.user,
+          profile: result.profile,
+          employeeId: result.employeeId,
+          generatedPassword: result.generatedPassword, // Share this with employee
+        },
+      });
+    } catch (error) {
+      if (error.name === "ZodError") {
+        logger.error("Validation error in createEmployee:", error);
+        return next(new APIError(400, "Validation error", error.errors));
+      }
+      logger.error("Error in createEmployee controller:", error);
+      next(error);
+    }
+  }
 }
 
 export default new EmployeeProfileController();

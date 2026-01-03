@@ -134,27 +134,27 @@ export default function EmployeeProfileView() {
         if (isNewEmployee) return {};
         
         if (isOwnProfile) {
-            if (!myProfile) return null;
+            // Always return data for own profile, even if myProfile is null
             return {
-                ...myProfile,
+                ...(myProfile || {}),
                 name: user?.name,
                 email: user?.email,
                 role: user?.role,
                 loginId: user?.employeeId,
                 mobile: user?.phone,
                 // Map store fields to view fields
-                department: myProfile.department || "Engineering",
+                department: myProfile?.department || "Engineering",
                 location: "Ahmedabad, India",
-                about: myProfile.about || "Passionate software engineer building DayFlow.",
+                about: myProfile?.about || "Passionate software engineer building DayFlow.",
                 jobLove: "Building tools that help people work better.",
                 hobbies: "Coding, Traveling, Reading",
-                skills: ["React", "Node.js", "MongoDB"],
-                certifications: [],
-                dob: myProfile.dateOfBirth ? format(new Date(myProfile.dateOfBirth), 'dd MMM yyyy') : "N/A",
+                skills: myProfile?.skills || ["React", "Node.js", "MongoDB"],
+                certifications: myProfile?.certifications || [],
+                dob: myProfile?.dateOfBirth ? format(new Date(myProfile.dateOfBirth), 'dd MMM yyyy') : "N/A",
                 personalEmail: user?.email,
-                gender: myProfile.gender || "Not set",
-                maritalStatus: "Single",
-                doj: myProfile.joiningDate ? format(new Date(myProfile.joiningDate), 'dd MMM yyyy') : "N/A",
+                gender: myProfile?.gender || "Not set",
+                maritalStatus: myProfile?.maritalStatus || "Single",
+                doj: myProfile?.joiningDate ? format(new Date(myProfile.joiningDate), 'dd MMM yyyy') : "N/A",
             };
         }
         
@@ -257,7 +257,8 @@ export default function EmployeeProfileView() {
         );
     }
 
-    if (!displayData && !isNewEmployee) {
+    // Only show 'not found' for other users' profiles when admin viewing
+    if (!displayData && !isNewEmployee && !isOwnProfile) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <p className="text-gray-500">Profile not found</p>

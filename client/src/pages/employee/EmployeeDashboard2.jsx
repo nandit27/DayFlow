@@ -25,10 +25,18 @@ export default function EmployeeDashboard() {
         fetchMyAttendance();
     }, [fetchMyAttendance]);
 
+    // Recalculate these values whenever myAttendance changes
     const todayStatus = getTodayStatus();
     const monthlyStats = getMonthlyStats();
     const isCheckedIn = !!todayStatus?.checkIn;
     const hasCheckedOut = !!todayStatus?.checkOut;
+
+    console.log('🎯 Dashboard State:', { 
+        myAttendanceLength: myAttendance.length,
+        todayStatus, 
+        isCheckedIn, 
+        hasCheckedOut 
+    });
 
     const handleCheckIn = async () => {
         const result = await checkIn();

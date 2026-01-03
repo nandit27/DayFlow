@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Loader2, Circle, Plane } from 'lucide-react';
+import { Search, Loader2, Circle, Plane, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useAuthStore } from '@/store/authStore';
 import { useAttendanceStore } from '@/store/attendanceStore';
+import CreateEmployeeModal from './CreateEmployeeModal';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -22,6 +23,7 @@ export default function EmployeesListPage() {
     const [leaveData, setLeaveData] = useState({});
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const isAdmin = user?.role === 'HR' || user?.role === 'Admin';
     const todayStatus = getTodayStatus();
@@ -142,9 +144,18 @@ export default function EmployeesListPage() {
                             {isAdmin ? 'All Employees' : 'My Profile'}
                         </h1>
                         {isAdmin && (
-                            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-md text-sm font-semibold border border-purple-200">
-                                ADMIN VIEW
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm"
+                                >
+                                    <UserPlus className="h-5 w-5" />
+                                    Add Employee
+                                </button>
+                                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-md text-sm font-semibold border border-purple-200">
+                                    ADMIN VIEW
+                                </span>
+                            </div>
                         )}
                     </div>
 
@@ -291,6 +302,27 @@ export default function EmployeesListPage() {
                     </div>
                 )}
             </div>
+
+            {/* Create Employee Modal */}
+            {showCreateModal && (
+                <CreateEmployeeModal
+                    onClose={() => setShowCreateModal(false)}
+                    onSuccess={() => {
+                        // Refresh employee list
+                        if (isAdmin) {
+                            const fetchData = async () => {
+                                try {
+                                    const employeesRes = await axios.get(`${API_URL}`);
+                                    setEmployees(employeesRes.data.data || []);
+                                } catch (error) {
+                                    console.error('Error fetching employees:', error);
+                                }
+                            };
+                            fetchData();
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }

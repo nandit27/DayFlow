@@ -11,8 +11,11 @@ class AttendanceService {
    */
   normalizeDate(date) {
     const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
+    // Use UTC to avoid timezone issues
+    const year = normalized.getFullYear();
+    const month = normalized.getMonth();
+    const day = normalized.getDate();
+    return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
   }
 
   /**
@@ -147,6 +150,8 @@ class AttendanceService {
 
       const query = { user: userId };
 
+      console.log('🔍 getMyAttendance - userId:', userId, 'filters:', filters);
+
       // Date range filter
       if (startDate || endDate) {
         query.date = {};
@@ -163,6 +168,8 @@ class AttendanceService {
         query.status = status;
       }
 
+      console.log('🔍 getMyAttendance - final query:', query);
+
       const skip = (page - 1) * limit;
 
       const [records, total] = await Promise.all([
@@ -174,6 +181,9 @@ class AttendanceService {
           .limit(limit),
         Attendance.countDocuments(query),
       ]);
+
+      console.log('📊 getMyAttendance results - count:', records.length, 'total:', total);
+      console.log('📊 Records:', JSON.stringify(records, null, 2));
 
       return {
         records,

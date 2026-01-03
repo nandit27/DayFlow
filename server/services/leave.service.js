@@ -1,6 +1,7 @@
 import LeaveRequest from "../models/leaveRequest.model.js";
 import Attendance from "../models/attendance.model.js";
 import User from "../models/user.model.js";
+import EmployeeProfile from "../models/employeeProfile.model.js";
 import APIError from "../utils/APIError.js";
 import logger from "../utils/logger.js";
 
@@ -335,6 +336,24 @@ class LeaveService {
           400,
           `Leave request is already ${leaveRequest.status.toLowerCase()}`
         );
+      }
+
+      // Deduct leave allocation from employee profile
+      const employeeProfile = await EmployeeProfile.findOne({ user: leaveRequest.user });
+      if (employeeProfile && employeeProfile.leaveAllocation) {
+        const leaveType = leaveRequest.leaveType;
+        const totalDays = leaveRequest.totalDays;
+        
+        // Check if employee has enough leave balance
+        if (employeeProfile.leaveAllocation[leaveType] !== undefined) {
+          if (employeeProfile.leaveAllocation[leaveType] < totalDays) {
+            throw new APIError(400, `Insufficient ${leaveType} leave balance. Available: ${employeeProfile.leaveAllocation[leaveType]}, Requested: ${totalDays}`);
+          }
+          
+          // Deduct the leave days
+          employeeProfile.leaveAllocation[leaveType] -= totalDays;
+          await employeeProfile.save();
+        }
       }
 
       // Update leave request

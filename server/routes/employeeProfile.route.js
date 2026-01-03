@@ -9,6 +9,13 @@ router.get("/me", verifyToken, employeeProfileController.getMyProfile);
 router.put("/me", verifyToken, employeeProfileController.updateMyProfile);
 
 // HR Routes - Accessible by HR only
+router.post(
+  "/create-employee",
+  verifyToken,
+  authorizeRoles("HR"),
+  employeeProfileController.createEmployee
+);
+
 router.get(
   "/",
   verifyToken,

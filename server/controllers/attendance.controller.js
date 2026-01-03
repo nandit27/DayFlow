@@ -17,7 +17,17 @@ class AttendanceController {
     try {
       const userId = req.userId;
 
+      console.log('✅ checkIn controller - userId:', userId);
+
       const attendance = await attendanceService.checkIn(userId);
+
+      console.log('✅ checkIn controller - created attendance:', { 
+        id: attendance._id, 
+        user: attendance.user,
+        date: attendance.date,
+        checkIn: attendance.checkIn,
+        status: attendance.status 
+      });
 
       res.status(200).json({
         success: true,
@@ -61,10 +71,16 @@ class AttendanceController {
     try {
       const userId = req.userId;
 
+      console.log('🎯 getMyAttendance controller - userId:', userId);
+
       // Validate query parameters
       const filters = attendanceQuerySchema.parse(req.query);
 
+      console.log('🎯 getMyAttendance controller - filters:', filters);
+
       const result = await attendanceService.getMyAttendance(userId, filters);
+
+      console.log('🎯 getMyAttendance controller - result:', { recordsCount: result.records.length, pagination: result.pagination });
 
       res.status(200).json({
         success: true,

@@ -1,103 +1,84 @@
 import { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
-import { useAttendanceStore } from '@/store/attendanceStore';
 import axios from 'axios';
 
 export default function AdminAttendanceView2() {
     const [selectedMonth, setSelectedMonth] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
-    const [employees, setEmployees] = useState([]);
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [attendanceData, setAttendanceData] = useState([]);
+    const [employeesAttendance, setEmployeesAttendance] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch all employees on mount
+    // Fetch all employees and their attendance
     useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/api/profile', {
-                    withCredentials: true
-                });
-                const employeesList = response.data.data || [];
-                setEmployees(employeesList);
-                if (employeesList.length > 0) {
-                    setSelectedEmployee(employeesList[0]);
-                }
-            } catch (error) {
-                console.error('Error fetching employees:', error);
-            }
-        };
-        fetchEmployees();
-    }, []);
-
-    // Fetch attendance when employee or month changes
-    useEffect(() => {
-        const fetchAttendance = async () => {
-            if (!selectedEmployee?.user?._id) return;
-
+        const fetchData = async () => {
             setIsLoading(true);
             try {
+                // Fetch employees
+                const employeesResponse = await axios.get('http://localhost:3000/api/profile', {
+                    withCredentials: true
+                });
+                const employeesList = employeesResponse.data.data || [];
+
+                // Fetch attendance for the month
                 const startDate = startOfMonth(selectedMonth);
                 const endDate = endOfMonth(selectedMonth);
 
-                const response = await axios.get(
-                    `http://localhost:3000/api/attendance/${selectedEmployee.user._id}`,
+                const attendanceResponse = await axios.get(
+                    'http://localhost:3000/api/attendance/all',
                     {
                         params: {
                             startDate: startDate.toISOString(),
                             endDate: endDate.toISOString(),
-                            limit: 100
+                            limit: 1000
                         },
                         withCredentials: true
                     }
                 );
-                setAttendanceData(response.data.data || []);
+                const attendanceData = attendanceResponse.data.data || [];
+
+                // Group attendance by employee
+                const attendanceByEmployee = {};
+                attendanceData.forEach(att => {
+                    const userId = att.user?._id;
+                    if (userId) {
+                        if (!attendanceByEmployee[userId]) {
+                            attendanceByEmployee[userId] = [];
+                        }
+                        attendanceByEmployee[userId].push(att);
+                    }
+                });
+
+                // Combine employees with their attendance
+                const combined = employeesList.map(emp => {
+                    const userId = emp.user?._id;
+                    const attendance = attendanceByEmployee[userId] || [];
+                    
+                    // Calculate stats
+                    const presentDays = attendance.filter(a => 
+                        a.checkIn || a.status === 'PRESENT'
+                    ).length;
+                    const leaveDays = attendance.filter(a => a.status === 'LEAVE').length;
+                    
+                    return {
+                        ...emp,
+                        attendance,
+                        presentDays,
+                        leaveDays
+                    };
+                });
+
+                setEmployeesAttendance(combined);
             } catch (error) {
-                console.error('Error fetching attendance:', error);
-                setAttendanceData([]);
+                console.error('Error fetching data:', error);
+                setEmployeesAttendance([]);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchAttendance();
-    }, [selectedEmployee, selectedMonth]);
-
-    // Filter employees by search query
-    const filteredEmployees = employees.filter(emp => {
-        if (!searchQuery.trim()) return true;
-        const query = searchQuery.toLowerCase();
-        const name = emp.user?.name?.toLowerCase() || '';
-        const employeeId = emp.user?.employeeId?.toLowerCase() || '';
-        return name.includes(query) || employeeId.includes(query);
-    });
-
-    // Get all days in the month
-    const monthDays = eachDayOfInterval({
-        start: startOfMonth(selectedMonth),
-        end: endOfMonth(selectedMonth)
-    });
-
-    // Create a map of attendance by date
-    const attendanceMap = {};
-    attendanceData.forEach(att => {
-        const dateKey = format(new Date(att.date), 'yyyy-MM-dd');
-        attendanceMap[dateKey] = att;
-    });
-
-    // Calculate work hours
-    const calculateWorkHours = (checkIn, checkOut) => {
-        if (!checkIn || !checkOut) return '-';
-        const start = new Date(checkIn);
-        const end = new Date(checkOut);
-        const diffMs = end - start;
-        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    };
-
-    // Calculate extra hours
+        fetchData();
+    }, [selectedMonth]);
     const calculateExtraHours = (checkIn, checkOut) => {
         if (!checkIn || !checkOut) return '-';
         const start = new Date(checkIn);
