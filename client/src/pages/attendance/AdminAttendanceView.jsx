@@ -1,31 +1,73 @@
 import { useState, useEffect } from 'react';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, startOfDay, endOfDay } from 'date-fns';
 import { Button } from '../../components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronDown, Search, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Search, Filter, Loader2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// Mock Data
-const ALL_EMPLOYEES = [
-    { id: 1, name: "Sarah Chen", empId: "EMP001", checkIn: "09:00", checkOut: "17:30", department: "Engineering" },
-    { id: 2, name: "Michael Lee", empId: "EMP002", checkIn: "09:15", checkOut: "18:00", department: "Design" },
-    { id: 3, name: "David Kim", empId: "EMP003", checkIn: "08:45", checkOut: "17:00", department: "Product" },
-    { id: 4, name: "Jessica Wu", empId: "EMP004", checkIn: "09:30", checkOut: "18:30", department: "Engineering" },
-];
+import { useAttendanceStore } from '@/store/attendanceStore';
 
 export default function AdminAttendanceView() {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState("");
-    const [filteredData, setFilteredData] = useState(ALL_EMPLOYEES);
+    const [filteredData, setFilteredData] = useState([]);
 
-    // Filter logic
+    const { allAttendance, isLoading, fetchAllAttendance } = useAttendanceStore();
+
+    // Fetch attendance data for selected date
     useEffect(() => {
+        const start = startOfDay(selectedDate);
+        const end = endOfDay(selectedDate);
+
+        fetchAllAttendance({
+            startDate: start.toISOString(),
+            endDate: end.toISOString(),
+            limit: 100,
+        });
+    }, [selectedDate, fetchAllAttendance]);
+
+    // Filter logic based on search query
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFilteredData(allAttendance);
+            return;
+        }
+
         const lowerQuery = searchQuery.toLowerCase();
-        const filtered = ALL_EMPLOYEES.filter(emp =>
-            emp.name.toLowerCase().includes(lowerQuery) ||
-            emp.empId.toLowerCase().includes(lowerQuery)
-        );
+        const filtered = allAttendance.filter(record => {
+            const userName = record.user?.name?.toLowerCase() || '';
+            const userEmail = record.user?.email?.toLowerCase() || '';
+            return userName.includes(lowerQuery) || userEmail.includes(lowerQuery);
+        });
         setFilteredData(filtered);
-    }, [searchQuery]);
+    }, [searchQuery, allAttendance]);
+
+    // Calculate work hours
+    const calculateWorkHours = (checkIn, checkOut) => {
+        if (!checkIn || !checkOut) return '-';
+        
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        const diffMs = end - start;
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return `${diffHrs}h ${diffMins}m`;
+    };
+
+    // Get status badge styles
+    const getStatusStyles = (status) => {
+        switch (status) {
+            case 'PRESENT':
+                return 'bg-green-50 text-green-700 border-green-200';
+            case 'ABSENT':
+                return 'bg-red-50 text-red-700 border-red-200';
+            case 'HALF_DAY':
+                return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+            case 'LEAVE':
+                return 'bg-blue-50 text-blue-700 border-blue-200';
+            default:
+                return 'bg-gray-50 text-gray-700 border-gray-200';
+        }
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -53,13 +95,23 @@ export default function AdminAttendanceView() {
             {/* Navigation & Actions */}
             <div className="flex items-center justify-between">
 
-                {/* Date Controls (Wireframe Style) */}
+                {/* Date Controls */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedDate(subDays(selectedDate, 1))}>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9" 
+                            onClick={() => setSelectedDate(subDays(selectedDate, 1))}
+                        >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9" 
+                            onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                        >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
@@ -68,8 +120,12 @@ export default function AdminAttendanceView() {
                         {format(selectedDate, 'MMM dd')} <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
 
-                    <Button variant="secondary" className="h-10 px-4 font-medium shadow-none bg-neutral-100 hover:bg-neutral-200">
-                        Day View
+                    <Button 
+                        variant="secondary" 
+                        className="h-10 px-4 font-medium shadow-none bg-neutral-100 hover:bg-neutral-200"
+                        onClick={() => setSelectedDate(new Date())}
+                    >
+                        Today
                     </Button>
                 </div>
 
@@ -84,50 +140,70 @@ export default function AdminAttendanceView() {
             </div>
 
             {/* Admin Table */}
-            <div className="bg-white rounded-xl overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-neutral-50 border-b border-neutral-100">
-                        <tr>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Employee</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Department</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Check In</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Check Out</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                        {filteredData.length === 0 ? (
-                            <tr><td colSpan="5" className="p-8 text-center text-neutral-500">No employees found.</td></tr>
-                        ) : (
-                            filteredData.map((emp, idx) => (
-                                <motion.tr
-                                    key={emp.id}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="hover:bg-neutral-50/80 transition-colors"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="font-semibold text-neutral-900">{emp.name}</div>
-                                        <div className="text-xs text-neutral-500">{emp.empId}</div>
+            {isLoading ? (
+                <div className="bg-white rounded-xl p-12 flex flex-col items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+                    <p className="text-neutral-500">Loading attendance records...</p>
+                </div>
+            ) : (
+                <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full">
+                        <thead className="bg-neutral-50 border-b border-neutral-100">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Employee</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Check In</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Check Out</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Work Hours</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-100">
+                            {filteredData.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="p-12 text-center">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Clock className="h-12 w-12 text-neutral-300 mb-3" />
+                                            <p className="text-neutral-500 font-medium">No attendance records found</p>
+                                            <p className="text-neutral-400 text-sm mt-1">
+                                                {searchQuery ? 'Try adjusting your search' : 'No employees checked in on this date'}
+                                            </p>
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                            {emp.department}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 font-mono text-sm text-neutral-700">{emp.checkIn}</td>
-                                    <td className="px-6 py-4 font-mono text-sm text-neutral-700">{emp.checkOut}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="h-2 w-2 rounded-full bg-green-500 inline-block mr-2"></span>
-                                        <span className="text-sm font-medium text-green-700">Present</span>
-                                    </td>
-                                </motion.tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                                </tr>
+                            ) : (
+                                filteredData.map((record, idx) => (
+                                    <motion.tr
+                                        key={record._id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="hover:bg-neutral-50/80 transition-colors"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="font-semibold text-neutral-900">{record.user?.name || 'N/A'}</div>
+                                            <div className="text-xs text-neutral-500">{record.user?.email || 'N/A'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 font-mono text-sm text-neutral-700">
+                                            {record.checkIn ? format(new Date(record.checkIn), 'HH:mm') : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 font-mono text-sm text-neutral-700">
+                                            {record.checkOut ? format(new Date(record.checkOut), 'HH:mm') : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 font-mono text-sm text-neutral-700">
+                                            {calculateWorkHours(record.checkIn, record.checkOut)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${getStatusStyles(record.status)}`}>
+                                                {record.status.replace('_', ' ')}
+                                            </span>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
         </div>
     );

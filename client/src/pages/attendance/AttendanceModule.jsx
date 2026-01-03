@@ -2,10 +2,14 @@ import { useState } from 'react';
 import AdminAttendanceView from './AdminAttendanceView';
 import EmployeeAttendanceView from './EmployeeAttendanceView';
 import { cn } from "@/lib/utils";
+import { useAuthStore } from '@/store/authStore';
 
 export default function AttendanceModule() {
-    const [viewMode, setViewMode] = useState('employee'); // 'employee' or 'admin'
+    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState('attendance');
+    
+    // Determine view based on user role
+    const isAdmin = user?.role === 'HR' || user?.role === 'Admin';
 
     return (
         <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 transition-colors">
@@ -34,30 +38,20 @@ export default function AttendanceModule() {
                     </nav>
                 </div>
 
-                {/* Right: View Toggle (Admin vs Employee) */}
-                <div className="flex items-center gap-2 bg-neutral-100 p-1 rounded-lg">
-                    <button
-                        onClick={() => setViewMode('employee')}
-                        className={cn(
-                            "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
-                            viewMode === 'employee'
-                                ? "bg-white text-black shadow-sm ring-1 ring-neutral-200"
-                                : "text-neutral-500 hover:text-neutral-900"
-                        )}
-                    >
-                        View as Employee
-                    </button>
-                    <button
-                        onClick={() => setViewMode('admin')}
-                        className={cn(
-                            "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
-                            viewMode === 'admin'
-                                ? "bg-white text-black shadow-sm ring-1 ring-neutral-200"
-                                : "text-neutral-500 hover:text-neutral-900"
-                        )}
-                    >
-                        View as Admin
-                    </button>
+                {/* Right: Role Indicator */}
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-neutral-100 rounded-lg">
+                        <div className={cn(
+                            "h-2 w-2 rounded-full",
+                            isAdmin ? "bg-purple-500" : "bg-blue-500"
+                        )} />
+                        <span className="text-sm font-medium text-neutral-700">
+                            {isAdmin ? 'Admin View' : 'Employee View'}
+                        </span>
+                    </div>
+                    <div className="text-sm text-neutral-600">
+                        {user?.name}
+                    </div>
                 </div>
             </div>
 
@@ -65,10 +59,10 @@ export default function AttendanceModule() {
             <div className="max-w-7xl mx-auto p-6">
                 {activeTab === 'attendance' ? (
                     <div className="animate-in fade-in duration-300">
-                        {viewMode === 'employee' ? (
-                            <EmployeeAttendanceView />
-                        ) : (
+                        {isAdmin ? (
                             <AdminAttendanceView />
+                        ) : (
+                            <EmployeeAttendanceView />
                         )}
                     </div>
                 ) : (
