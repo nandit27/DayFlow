@@ -17,6 +17,7 @@ import EmployeeProfileView from "./pages/employee/EmployeeProfileView";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard2";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LeaveModule from "./pages/leave/LeaveModule";
+import PayrollModule from "./pages/payroll/PayrollModule";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -211,12 +212,12 @@ function App() {
           } 
         />
 
-        {/* Leaves Module */}
+        {/* Payroll Module */}
         <Route 
-          path="/leaves" 
+          path="/payroll" 
           element={
             <ProtectedRoute>
-              <LeaveModule />
+              <PayrollModule />
             </ProtectedRoute>
           } 
         />
